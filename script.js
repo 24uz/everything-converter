@@ -1658,4 +1658,13 @@
     if (!window.location.search) {
         updateInputSymbol();
     }
-})();
+})();document.querySelector(".brand").addEventListener("click", function (event) {
+    event.preventDefault();
+
+    // Clear any saved converter state
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Go to the completely clean homepage
+    window.location.href = "https://24uz.github.io/everything-converter/";
+});

@@ -1,364 +1,909 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+:root {
+    --bg: #f5f5f2;
+    --surface: #ffffff;
+    --surface-soft: #eeeeeb;
+    --text: #111111;
+    --muted: #6d6d68;
+    --border: #d9d9d4;
+    --border-strong: #bdbdb7;
+    --accent: #2557d6;
+    --accent-soft: #e8edff;
+    --success: #287a50;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.07);
+    --radius: 18px;
+    --radius-small: 10px;
+    --max-width: 1180px;
+    --transition: 180ms ease;
+}
 
-    <meta
-        name="description"
-        content="Everything Converter — turn ordinary numbers into things you can actually understand."
-    >
+[data-theme="dark"] {
+    --bg: #101010;
+    --surface: #181818;
+    --surface-soft: #222222;
+    --text: #f2f2ee;
+    --muted: #a3a39d;
+    --border: #30302e;
+    --border-strong: #484844;
+    --accent: #7797ff;
+    --accent-soft: #202b4e;
+    --success: #70c494;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
 
-    <meta name="theme-color" content="#111111">
+* {
+    box-sizing: border-box;
+}
 
-    <title>Everything Converter</title>
+html {
+    scroll-behavior: smooth;
+}
 
-    <link rel="stylesheet" href="style.css">
-</head>
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    line-height: 1.5;
+    transition:
+        background-color 180ms ease,
+        color 180ms ease;
+}
 
-<body>
-    <header class="site-header">
-        <div class="nav-wrap">
-            <a href="#" class="brand" aria-label="Everything Converter home">
-                <span class="brand-mark">EC</span>
-                <span>Everything Converter</span>
-            </a>
+button,
+input,
+select {
+    font: inherit;
+}
 
-            <nav class="nav-links" aria-label="Main navigation">
-                <a href="#convert">Convert</a>
-                <a href="#explore">Explore</a>
-                <a href="#about">About</a>
-            </nav>
+button,
+select {
+    cursor: pointer;
+}
 
-            <button
-                class="theme-button"
-                id="themeToggle"
-                type="button"
-                aria-label="Toggle colour theme"
-                title="Toggle theme"
-            >
-                <span id="themeIcon">☾</span>
-            </button>
-        </div>
-    </header>
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
 
-    <main>
-        <section class="hero" id="convert">
-            <div class="hero-inner">
-                <p class="eyebrow">A converter for normal things</p>
+a {
+    color: inherit;
+    text-decoration: none;
+}
 
-                <h1>
-                    Everything means something<br>
-                    when you convert it.
-                </h1>
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+}
 
-                <p class="hero-description">
-                    Turn numbers into things you can actually understand.
-                    Money, time, distance, data and the occasional ridiculous comparison.
-                </p>
+.nav-wrap {
+    width: min(calc(100% - 40px), var(--max-width));
+    margin: auto;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+}
 
-                <div class="converter-shell">
-                    <form id="converterForm" class="converter-form">
-                        <label for="mainInput">What do you want to convert?</label>
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    font-weight: 750;
+    letter-spacing: -0.03em;
+}
 
-                        <div class="input-row">
-                            <div class="input-wrap">
-                                <span class="input-symbol" id="inputSymbol"></span>
+.brand-mark {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--text);
+    display: grid;
+    place-items: center;
+    font-size: 9px;
+    letter-spacing: -0.04em;
+}
 
-                                <input
-                                    id="mainInput"
-                                    name="value"
-                                    type="number"
-                                    inputmode="decimal"
-                                    min="0"
-                                    step="any"
-                                    value="10000"
-                                    autocomplete="off"
-                                    aria-describedby="inputHelp"
-                                >
-                            </div>
+.nav-links {
+    display: flex;
+    gap: 28px;
+    color: var(--muted);
+    font-size: 14px;
+}
 
-                            <select id="unitSelect" aria-label="Choose unit"></select>
+.nav-links a {
+    transition: color var(--transition);
+}
 
-                            <button class="convert-button" type="submit">
-                                Convert
-                                <span>→</span>
-                            </button>
-                        </div>
+.nav-links a:hover {
+    color: var(--text);
+}
 
-                        <p class="input-help" id="inputHelp">
-                            Pick something. We'll make it make sense.
-                        </p>
-                    </form>
+.theme-button {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    transition:
+        transform var(--transition),
+        border-color var(--transition);
+}
 
-                    <div class="example-row" aria-label="Examples">
-                        <span>Try:</span>
+.theme-button:hover {
+    transform: rotate(10deg);
+    border-color: var(--border-strong);
+}
 
-                        <button type="button" class="example-chip" data-value="10000" data-unit="hours">
-                            10,000 hours
-                        </button>
+.hero {
+    padding: 110px 20px 80px;
+}
 
-                        <button type="button" class="example-chip" data-value="1000" data-unit="gbp">
-                            £1,000
-                        </button>
+.hero-inner {
+    width: min(100%, 980px);
+    margin: auto;
+    text-align: center;
+}
 
-                        <button type="button" class="example-chip" data-value="500" data-unit="miles">
-                            500 miles
-                        </button>
+.eyebrow {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 750;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
 
-                        <button type="button" class="example-chip" data-value="1" data-unit="tb">
-                            1 TB
-                        </button>
+.hero h1 {
+    margin: 0;
+    font-size: clamp(42px, 7vw, 82px);
+    line-height: 0.98;
+    letter-spacing: -0.065em;
+    font-weight: 780;
+}
 
-                        <button type="button" class="example-chip" data-value="10000" data-unit="calories">
-                            10,000 calories
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
+.hero-description {
+    width: min(100%, 620px);
+    margin: 28px auto 42px;
+    color: var(--muted);
+    font-size: 18px;
+}
 
-        <section class="results-section" id="results" hidden>
-            <div class="content-width">
-                <div class="results-header">
-                    <div>
-                        <p class="eyebrow">Your conversion</p>
-                        <h2 id="resultsTitle">10,000 hours</h2>
-                    </div>
+.converter-shell {
+    text-align: left;
+    padding: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
 
-                    <div class="result-actions">
-                        <button class="secondary-button" id="copyResult" type="button">
-                            Copy result
-                        </button>
+.converter-form label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
 
-                        <button class="secondary-button" id="shareResult" type="button">
-                            Share
-                        </button>
+.input-row {
+    display: grid;
+    grid-template-columns: 1fr 190px 150px;
+    gap: 10px;
+}
 
-                        <button class="secondary-button" id="weirdButton" type="button">
-                            Give me a weird comparison
-                        </button>
-                    </div>
-                </div>
+.input-wrap {
+    position: relative;
+}
 
-                <div class="conversion-layout">
-                    <div class="conversion-journey" id="conversionJourney"></div>
+.input-symbol {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 18px;
+    pointer-events: none;
+}
 
-                    <aside class="side-panel">
-                        <div class="panel-card">
-                            <div class="panel-heading">
-                                <div>
-                                    <p class="eyebrow">Assumptions</p>
-                                    <h3>Make it yours</h3>
-                                </div>
+.input-wrap input,
+#unitSelect {
+    width: 100%;
+    height: 58px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: var(--radius-small);
+    padding: 0 18px;
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition);
+}
 
-                                <button
-                                    class="collapse-button"
-                                    id="assumptionsToggle"
-                                    type="button"
-                                    aria-expanded="true"
-                                >
-                                    −
-                                </button>
-                            </div>
+.input-wrap input {
+    font-size: 21px;
+    font-weight: 650;
+    padding-left: 42px;
+}
 
-                            <div id="assumptionsContent" class="assumptions-content">
-                                <p class="panel-description">
-                                    Real-world comparisons are estimates. Change the assumptions
-                                    to match your world.
-                                </p>
+#unitSelect {
+    font-size: 14px;
+    font-weight: 650;
+}
 
-                                <div class="assumption-grid">
-                                    <label>
-                                        <span>Hourly wage</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeWage" type="number" min="0" step="0.01" value="13.45">
-                                        </div>
-                                    </label>
+.input-wrap input:hover,
+#unitSelect:hover {
+    border-color: var(--border-strong);
+}
 
-                                    <label>
-                                        <span>Coffee price</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeCoffee" type="number" min="0.01" step="0.01" value="4">
-                                        </div>
-                                    </label>
+.input-wrap input:focus,
+#unitSelect:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+    outline: none;
+}
 
-                                    <label>
-                                        <span>Takeaway meal</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeMeal" type="number" min="0.01" step="0.01" value="11">
-                                        </div>
-                                    </label>
+.convert-button {
+    height: 58px;
+    border: 0;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: var(--radius-small);
+    font-weight: 750;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    transition:
+        transform var(--transition),
+        opacity var(--transition);
+}
 
-                                    <label>
-                                        <span>Subscription / month</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeSubscription" type="number" min="0.01" step="0.01" value="12">
-                                        </div>
-                                    </label>
+.convert-button span {
+    font-size: 20px;
+    transition: transform var(--transition);
+}
 
-                                    <label>
-                                        <span>Daily rent</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeRent" type="number" min="0.01" step="0.01" value="30">
-                                        </div>
-                                    </label>
+.convert-button:hover {
+    transform: translateY(-2px);
+}
 
-                                    <label>
-                                        <span>Console price</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeConsole" type="number" min="1" step="1" value="499">
-                                        </div>
-                                    </label>
+.convert-button:hover span {
+    transform: translateX(4px);
+}
 
-                                    <label>
-                                        <span>Big Mac price</span>
-                                        <div class="assumption-input">
-                                            <span>£</span>
-                                            <input id="assumeBurger" type="number" min="0.01" step="0.01" value="5">
-                                        </div>
-                                    </label>
+.input-help {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
 
-                                    <label>
-                                        <span>Average step length</span>
-                                        <div class="assumption-input">
-                                            <span>m</span>
-                                            <input id="assumeStep" type="number" min="0.1" step="0.01" value="0.75">
-                                        </div>
-                                    </label>
-                                </div>
+.example-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+}
 
-                                <button class="apply-button" id="applyAssumptions" type="button">
-                                    Apply assumptions
-                                </button>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
+.example-row > span {
+    color: var(--muted);
+    font-size: 12px;
+    margin-right: 3px;
+}
 
-                <div class="meaning-section">
-                    <div class="meaning-heading">
-                        <p class="eyebrow">The ridiculous bit</p>
-                        <h2>Okay... but what does that actually mean?</h2>
-                        <p>
-                            The numbers make sense. These comparisons make them memorable.
-                        </p>
-                    </div>
+.example-chip {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        transform var(--transition);
+}
 
-                    <div class="comparison-grid" id="comparisonGrid"></div>
-                </div>
+.example-chip:hover {
+    background: var(--surface-soft);
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+}
 
-                <div class="weird-result" id="weirdResult" hidden>
-                    <div>
-                        <p class="eyebrow">You asked for weird</p>
-                        <h3 id="weirdTitle"></h3>
-                        <p id="weirdDescription"></p>
-                    </div>
+.results-section {
+    padding: 60px 20px 100px;
+    border-top: 1px solid var(--border);
+}
 
-                    <button class="secondary-button" id="anotherWeird" type="button">
-                        Another one
-                    </button>
-                </div>
-            </div>
-        </section>
+.content-width {
+    width: min(calc(100% - 40px), var(--max-width));
+    margin: auto;
+}
 
-        <section class="explore-section" id="explore">
-            <div class="content-width">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Explore</p>
-                        <h2>Things worth converting.</h2>
-                    </div>
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 30px;
+    margin-bottom: 42px;
+}
 
-                    <button class="outline-button" id="surpriseButton" type="button">
-                        Surprise me
-                    </button>
-                </div>
+.results-header h2 {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 54px);
+    letter-spacing: -0.055em;
+    line-height: 1;
+}
 
-                <div class="explore-grid">
-                    <button class="explore-card" data-value="1000000" data-unit="seconds">
-                        <span class="explore-number">01</span>
-                        <strong>How long is 1 million seconds?</strong>
-                        <span>Time → perspective</span>
-                    </button>
+.result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
 
-                    <button class="explore-card" data-value="100000" data-unit="gbp">
-                        <span class="explore-number">02</span>
-                        <strong>What is £100,000 in coffees?</strong>
-                        <span>Money → reality</span>
-                    </button>
+.secondary-button,
+.outline-button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    transition:
+        transform var(--transition),
+        border-color var(--transition),
+        background var(--transition);
+}
 
-                    <button class="explore-card" data-value="1000" data-unit="miles">
-                        <span class="explore-number">03</span>
-                        <strong>How far is 1,000 miles?</strong>
-                        <span>Distance → scale</span>
-                    </button>
+.secondary-button:hover,
+.outline-button:hover {
+    transform: translateY(-1px);
+    border-color: var(--border-strong);
+    background: var(--surface-soft);
+}
 
-                    <button class="explore-card" data-value="10" data-unit="tb">
-                        <span class="explore-number">04</span>
-                        <strong>What is 10 TB of data?</strong>
-                        <span>Data → stuff</span>
-                    </button>
+.conversion-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 50px;
+    align-items: start;
+}
 
-                    <button class="explore-card" data-value="10000" data-unit="hours">
-                        <span class="explore-number">05</span>
-                        <strong>How many working days are 10,000 hours?</strong>
-                        <span>Time → work</span>
-                    </button>
+.conversion-journey {
+    position: relative;
+}
 
-                    <button class="explore-card" data-value="1000000000" data-unit="seconds">
-                        <span class="explore-number">06</span>
-                        <strong>What does 1 billion seconds look like?</strong>
-                        <span>Time → absurdity</span>
-                    </button>
-                </div>
-            </div>
-        </section>
+.conversion-step {
+    position: relative;
+    padding: 0 0 52px 34px;
+    opacity: 0;
+    transform: translateY(14px);
+    animation: reveal 500ms forwards;
+}
 
-        <section class="about-section" id="about">
-            <div class="content-width">
-                <div class="about-grid">
-                    <div>
-                        <p class="eyebrow">About</p>
-                        <h2>Numbers are boring until you give them a reference point.</h2>
-                    </div>
+.conversion-step::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 9px;
+    height: 9px;
+    border: 2px solid var(--text);
+    background: var(--bg);
+    border-radius: 50%;
+}
 
-                    <div class="about-copy">
-                        <p>
-                            Everything Converter turns measurements, money and data into
-                            comparisons that are easier to picture.
-                        </p>
+.conversion-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 21px;
+    width: 1px;
+    height: calc(100% - 26px);
+    background: var(--border-strong);
+}
 
-                        <p>
-                            Some results are exact mathematical conversions. Others are
-                            deliberately labelled estimates based on editable assumptions.
-                        </p>
+.step-label {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
 
-                        <p>
-                            No account. No database. No tracking required. Just type a number
-                            and see what it actually means.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+.step-value {
+    font-size: clamp(35px, 5vw, 65px);
+    font-weight: 780;
+    line-height: 1;
+    letter-spacing: -0.055em;
+}
 
-    <footer class="site-footer">
-        <div class="content-width footer-inner">
-            <span>EVERYTHING CONVERTER</span>
-            <span>Made for numbers that need context.</span>
-        </div>
-    </footer>
+.step-description {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 14px;
+}
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+.step-description strong {
+    color: var(--text);
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+@keyframes reveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.side-panel {
+    position: sticky;
+    top: 95px;
+}
+
+.panel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+
+.panel-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.panel-heading h3 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -0.025em;
+}
+
+.collapse-button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 50%;
+}
+
+.panel-description {
+    margin: 18px 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.assumption-grid {
+    display: grid;
+    gap: 13px;
+}
+
+.assumption-grid label {
+    display: grid;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.assumption-input {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 8px;
+    padding-left: 10px;
+    color: var(--muted);
+}
+
+.assumption-input input {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    padding: 0 9px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.apply-button {
+    width: 100%;
+    margin-top: 16px;
+    border: 0;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.meaning-section {
+    margin-top: 100px;
+}
+
+.meaning-heading {
+    max-width: 650px;
+    margin-bottom: 28px;
+}
+
+.meaning-heading h2 {
+    margin: 0;
+    font-size: clamp(30px, 5vw, 52px);
+    line-height: 1;
+    letter-spacing: -0.055em;
+}
+
+.meaning-heading > p:last-child {
+    margin-top: 15px;
+    color: var(--muted);
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.comparison-card {
+    min-height: 190px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition:
+        transform var(--transition),
+        border-color var(--transition);
+}
+
+.comparison-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+}
+
+.comparison-icon {
+    font-size: 20px;
+}
+
+.comparison-label {
+    margin-top: auto;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 750;
+}
+
+.comparison-value {
+    margin-top: 8px;
+    font-size: 26px;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    font-weight: 760;
+}
+
+.comparison-note {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.weird-result {
+    margin-top: 35px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+}
+
+.weird-result h3 {
+    margin: 0;
+    font-size: 26px;
+    letter-spacing: -0.04em;
+}
+
+.weird-result p:last-child {
+    margin-bottom: 0;
+    color: var(--muted);
+}
+
+.explore-section {
+    padding: 100px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 30px;
+    margin-bottom: 35px;
+}
+
+.section-heading h2 {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.055em;
+}
+
+.explore-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.explore-card {
+    min-height: 190px;
+    text-align: left;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition:
+        transform var(--transition),
+        border-color var(--transition);
+}
+
+.explore-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+}
+
+.explore-number {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.explore-card strong {
+    max-width: 260px;
+    font-size: 19px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+}
+
+.explore-card > span:last-child {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.about-section {
+    padding: 100px 20px;
+    border-top: 1px solid var(--border);
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+}
+
+.about-grid h2 {
+    margin: 0;
+    max-width: 580px;
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 0.98;
+    letter-spacing: -0.06em;
+}
+
+.about-copy {
+    color: var(--muted);
+    font-size: 16px;
+}
+
+.about-copy p {
+    margin-top: 0;
+    margin-bottom: 24px;
+}
+
+.site-footer {
+    border-top: 1px solid var(--border);
+}
+
+.footer-inner {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 25px;
+    z-index: 200;
+    transform: translate(-50%, 20px);
+    opacity: 0;
+    pointer-events: none;
+    background: var(--text);
+    color: var(--bg);
+    padding: 11px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    transition:
+        opacity var(--transition),
+        transform var(--transition);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 900px) {
+    .input-row {
+        grid-template-columns: 1fr 170px;
+    }
+
+    .convert-button {
+        grid-column: 1 / -1;
+    }
+
+    .conversion-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .side-panel {
+        position: static;
+    }
+
+    .comparison-grid,
+    .explore-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .about-grid {
+        gap: 45px;
+    }
+}
+
+@media (max-width: 650px) {
+    .nav-wrap {
+        min-height: 62px;
+        width: min(calc(100% - 28px), var(--max-width));
+    }
+
+    .brand span:last-child {
+        display: none;
+    }
+
+    .nav-links {
+        gap: 15px;
+        font-size: 12px;
+    }
+
+    .hero {
+        padding: 70px 14px 55px;
+    }
+
+    .hero-description {
+        font-size: 16px;
+    }
+
+    .converter-shell {
+        padding: 18px;
+    }
+
+    .input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .convert-button {
+        grid-column: auto;
+    }
+
+    .results-section,
+    .explore-section,
+    .about-section {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .content-width {
+        width: 100%;
+    }
+
+    .results-header {
+        display: block;
+    }
+
+    .result-actions {
+        justify-content: flex-start;
+        margin-top: 20px;
+    }
+
+    .conversion-step {
+        padding-left: 28px;
+    }
+
+    .comparison-grid,
+    .explore-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-card {
+        min-height: 160px;
+    }
+
+    .section-heading,
+    .about-grid,
+    .weird-result {
+        display: block;
+    }
+
+    .section-heading .outline-button {
+        margin-top: 20px;
+    }
+
+    .weird-result .secondary-button {
+        margin-top: 18px;
+    }
+
+    .footer-inner {
+        min-height: 100px;
+        align-items: flex-start;
+        justify-content: center;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -1,53 +1,1476 @@
-/* =========================================================
-   EVERYTHING CONVERTER
-   Vanilla JavaScript conversion + comparison engine
-   ========================================================= */
-
 "use strict";
 
 /* =========================================================
-   HELPERS
-   ========================================================= */
+   EVERYTHING CONVERTER
+   No libraries. No API. GitHub Pages compatible.
+========================================================= */
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+/* =========================================================
+   STATE
+========================================================= */
 
-function formatNumber(value, decimals = 1) {
+let currentValue = 10000;
+let currentUnit = "hours";
+let currentResultText = "";
+let weirdPool = [];
+let lastWeirdIndex = -1;
+
+/* =========================================================
+   ASSUMPTIONS
+========================================================= */
+
+const assumptions = {
+    wage: 13.45,
+    coffee: 4,
+    meal: 11,
+    subscription: 12,
+    rent: 30,
+    console: 499,
+    burger: 5,
+    step: 0.75
+};
+
+/* =========================================================
+   UNITS
+========================================================= */
+
+const units = {
+    seconds: {
+        category: "time",
+        label: "Seconds",
+        short: "seconds",
+        base: 1
+    },
+
+    minutes: {
+        category: "time",
+        label: "Minutes",
+        short: "minutes",
+        base: 60
+    },
+
+    hours: {
+        category: "time",
+        label: "Hours",
+        short: "hours",
+        base: 3600
+    },
+
+    days: {
+        category: "time",
+        label: "Days",
+        short: "days",
+        base: 86400
+    },
+
+    weeks: {
+        category: "time",
+        label: "Weeks",
+        short: "weeks",
+        base: 604800
+    },
+
+    months: {
+        category: "time",
+        label: "Months",
+        short: "months",
+        base: 2629800
+    },
+
+    years: {
+        category: "time",
+        label: "Years",
+        short: "years",
+        base: 31557600
+    },
+
+    decades: {
+        category: "time",
+        label: "Decades",
+        short: "decades",
+        base: 315576000
+    },
+
+    centuries: {
+        category: "time",
+        label: "Centuries",
+        short: "centuries",
+        base: 3155760000
+    },
+
+    metres: {
+        category: "distance",
+        label: "Metres",
+        short: "m",
+        base: 1
+    },
+
+    kilometres: {
+        category: "distance",
+        label: "Kilometres",
+        short: "km",
+        base: 1000
+    },
+
+    miles: {
+        category: "distance",
+        label: "Miles",
+        short: "miles",
+        base: 1609.344
+    },
+
+    feet: {
+        category: "distance",
+        label: "Feet",
+        short: "ft",
+        base: 0.3048
+    },
+
+    yards: {
+        category: "distance",
+        label: "Yards",
+        short: "yd",
+        base: 0.9144
+    },
+
+    inches: {
+        category: "distance",
+        label: "Inches",
+        short: "in",
+        base: 0.0254
+    },
+
+    grams: {
+        category: "weight",
+        label: "Grams",
+        short: "g",
+        base: 1
+    },
+
+    kilograms: {
+        category: "weight",
+        label: "Kilograms",
+        short: "kg",
+        base: 1000
+    },
+
+    pounds: {
+        category: "weight",
+        label: "Pounds",
+        short: "lb",
+        base: 453.59237
+    },
+
+    ounces: {
+        category: "weight",
+        label: "Ounces",
+        short: "oz",
+        base: 28.349523125
+    },
+
+    tonnes: {
+        category: "weight",
+        label: "Tonnes",
+        short: "tonnes",
+        base: 1000000
+    },
+
+    calories: {
+        category: "calories",
+        label: "Calories",
+        short: "calories",
+        base: 1
+    },
+
+    bytes: {
+        category: "data",
+        label: "Bytes",
+        short: "bytes",
+        base: 1
+    },
+
+    kb: {
+        category: "data",
+        label: "Kilobytes",
+        short: "KB",
+        base: 1000
+    },
+
+    mb: {
+        category: "data",
+        label: "Megabytes",
+        short: "MB",
+        base: 1000000
+    },
+
+    gb: {
+        category: "data",
+        label: "Gigabytes",
+        short: "GB",
+        base: 1000000000
+    },
+
+    tb: {
+        category: "data",
+        label: "Terabytes",
+        short: "TB",
+        base: 1000000000000
+    },
+
+    pb: {
+        category: "data",
+        label: "Petabytes",
+        short: "PB",
+        base: 1000000000000000
+    },
+
+    joules: {
+        category: "energy",
+        label: "Joules",
+        short: "J",
+        base: 1
+    },
+
+    kj: {
+        category: "energy",
+        label: "Kilojoules",
+        short: "kJ",
+        base: 1000
+    },
+
+    kwh: {
+        category: "energy",
+        label: "Kilowatt-hours",
+        short: "kWh",
+        base: 3600000
+    },
+
+    gbp: {
+        category: "money",
+        label: "British Pounds",
+        short: "£",
+        base: 1
+    },
+
+    usd: {
+        category: "money",
+        label: "US Dollars",
+        short: "$",
+        base: 0.79
+    },
+
+    eur: {
+        category: "money",
+        label: "Euros",
+        short: "€",
+        base: 0.86
+    }
+};
+
+const categoryNames = {
+    time: "Time",
+    money: "Money",
+    distance: "Distance",
+    weight: "Weight",
+    calories: "Calories",
+    data: "Data",
+    energy: "Energy"
+};
+
+/* =========================================================
+   CATEGORY UNIT ORDER
+========================================================= */
+
+const categoryUnits = {
+    time: [
+        "seconds",
+        "minutes",
+        "hours",
+        "days",
+        "weeks",
+        "months",
+        "years",
+        "decades",
+        "centuries"
+    ],
+
+    money: [
+        "gbp",
+        "usd",
+        "eur"
+    ],
+
+    distance: [
+        "metres",
+        "kilometres",
+        "miles",
+        "feet",
+        "yards",
+        "inches"
+    ],
+
+    weight: [
+        "grams",
+        "kilograms",
+        "pounds",
+        "ounces",
+        "tonnes"
+    ],
+
+    calories: [
+        "calories"
+    ],
+
+    data: [
+        "bytes",
+        "kb",
+        "mb",
+        "gb",
+        "tb",
+        "pb"
+    ],
+
+    energy: [
+        "joules",
+        "kj",
+        "kwh"
+    ]
+};
+
+/* =========================================================
+   FORMATTERS
+========================================================= */
+
+function formatNumber(value, maxDecimals = 2) {
     if (!Number.isFinite(value)) return "—";
 
-    const abs = Math.abs(value);
+    const absolute = Math.abs(value);
 
-    let maximumFractionDigits = decimals;
+    if (absolute >= 1e15) {
+        return value.toExponential(2);
+    }
 
-    if (abs >= 1000) maximumFractionDigits = 1;
-    if (abs >= 1000000) maximumFractionDigits = 2;
-    if (abs < 1 && abs !== 0) maximumFractionDigits = 2;
+    if (absolute >= 1000000) {
+        return new Intl.NumberFormat("en-GB", {
+            maximumFractionDigits: maxDecimals
+        }).format(value);
+    }
+
+    if (absolute >= 1000) {
+        return new Intl.NumberFormat("en-GB", {
+            maximumFractionDigits: maxDecimals
+        }).format(value);
+    }
+
+    if (absolute < 0.01 && absolute !== 0) {
+        return value.toPrecision(3);
+    }
 
     return new Intl.NumberFormat("en-GB", {
-        maximumFractionDigits,
-        minimumFractionDigits: 0
+        maximumFractionDigits: maxDecimals
     }).format(value);
 }
 
-function formatMoney(value, currency = "GBP") {
-    if (!Number.isFinite(value)) return "—";
-
-    return new Intl.NumberFormat("en-GB", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 2
-    }).format(value);
+function formatMoney(value, currency = "£") {
+    return `${currency}${formatNumber(value, 2)}`;
 }
 
-function formatApprox(value, unit, decimals = 1) {
-    return `≈ ${formatNumber(value, decimals)} ${unit}`;
+function plural(value, singular, pluralWord = `${singular}s`) {
+    return Math.abs(value - 1) < 0.00001 ? singular : pluralWord;
 }
 
-function pluralize(value, singular, plural = `${singular}s`) {
-    return Math.abs(value - 1) < 0.000001 ? singular : plural;
+function niceUnit(unit, value) {
+    const info = units[unit];
+
+    if (!info) return unit;
+
+    return plural(value, info.short);
 }
+
+/* =========================================================
+   CONVERSION
+========================================================= */
+
+function toBase(value, unit) {
+    return value * units[unit].base;
+}
+
+function fromBase(value, unit) {
+    return value / units[unit].base;
+}
+
+function convertBetween(value, fromUnit, toUnit) {
+    return fromBase(toBase(value, fromUnit), toUnit);
+}
+
+/* =========================================================
+   SYMBOL
+========================================================= */
+
+function updateInputSymbol() {
+    const symbol = $("#inputSymbol");
+    const unit = units[currentUnit];
+
+    if (!symbol || !unit) return;
+
+    if (currentUnit === "gbp") {
+        symbol.textContent = "£";
+    } else if (currentUnit === "usd") {
+        symbol.textContent = "$";
+    } else if (currentUnit === "eur") {
+        symbol.textContent = "€";
+    } else {
+        symbol.textContent = "";
+    }
+}
+
+/* =========================================================
+   UNIT SELECT
+========================================================= */
+
+function populateUnits(selectedUnit = currentUnit) {
+    const select = $("#unitSelect");
+    if (!select) return;
+
+    const category = units[selectedUnit]?.category || "time";
+
+    select.innerHTML = "";
+
+    categoryUnits[category].forEach((unitKey) => {
+        const option = document.createElement("option");
+        option.value = unitKey;
+        option.textContent = units[unitKey].label;
+
+        if (unitKey === selectedUnit) {
+            option.selected = true;
+        }
+
+        select.appendChild(option);
+    });
+
+    currentUnit = selectedUnit;
+    updateInputSymbol();
+}
+
+/* =========================================================
+   DESCRIPTIONS
+========================================================= */
+
+function timeDescription(value, unit) {
+    const hours = convertBetween(value, unit, "hours");
+
+    if (hours >= 24) {
+        return `That's roughly ${formatNumber(hours / 24, 1)} days of continuous time.`;
+    }
+
+    return `That's about ${formatNumber(hours, 1)} hours.`;
+}
+
+function distanceDescription(value, unit) {
+    const miles = convertBetween(value, unit, "miles");
+    const km = convertBetween(value, unit, "kilometres");
+
+    return `That's about ${formatNumber(miles, 1)} miles, or ${formatNumber(km, 1)} km.`;
+}
+
+function weightDescription(value, unit) {
+    const kg = convertBetween(value, unit, "kilograms");
+
+    return `That's approximately ${formatNumber(kg, 1)} kg.`;
+}
+
+function dataDescription(value, unit) {
+    const gb = convertBetween(value, unit, "gb");
+
+    return `That's roughly ${formatNumber(gb, 2)} GB of data.`;
+}
+
+function caloriesDescription(value, unit) {
+    const calories = convertBetween(value, unit, "calories");
+
+    return `${formatNumber(calories, 0)} calories of energy — a simplified comparison, not a prediction of weight gain or loss.`;
+}
+
+function energyDescription(value, unit) {
+    const kwh = convertBetween(value, unit, "kwh");
+
+    return `That's approximately ${formatNumber(kwh, 3)} kWh of energy.`;
+}
+
+function moneyDescription(value, unit) {
+    const gbp = convertBetween(value, unit, "gbp");
+
+    return `Using an approximate exchange rate, that's around ${formatMoney(gbp)}.`;
+}
+
+/* =========================================================
+   JOURNEY
+========================================================= */
+
+function buildJourney(value, unit) {
+    const category = units[unit].category;
+    const journey = $("#conversionJourney");
+
+    if (!journey) return;
+
+    const steps = [];
+
+    steps.push({
+        label: "Original",
+        value,
+        unit,
+        description: getOriginalDescription(value, unit)
+    });
+
+    if (category === "time") {
+        const targets = [
+            ["days", "Days"],
+            ["weeks", "Weeks"],
+            ["months", "Months"],
+            ["years", "Years"]
+        ];
+
+        targets.forEach(([target, label]) => {
+            const converted = convertBetween(value, unit, target);
+
+            if (converted >= 0.01) {
+                steps.push({
+                    label,
+                    value: converted,
+                    unit: target,
+                    description: timeDescription(value, unit)
+                });
+            }
+        });
+    }
+
+    if (category === "distance") {
+        const targets = [
+            ["metres", "Metres"],
+            ["kilometres", "Kilometres"],
+            ["miles", "Miles"]
+        ];
+
+        targets.forEach(([target, label]) => {
+            if (target === unit) return;
+
+            const converted = convertBetween(value, unit, target);
+
+            if (converted >= 0.01) {
+                steps.push({
+                    label,
+                    value: converted,
+                    unit: target,
+                    description: distanceDescription(value, unit)
+                });
+            }
+        });
+    }
+
+    if (category === "weight") {
+        const targets = [
+            ["kilograms", "Kilograms"],
+            ["pounds", "Pounds"],
+            ["tonnes", "Tonnes"]
+        ];
+
+        targets.forEach(([target, label]) => {
+            if (target === unit) return;
+
+            const converted = convertBetween(value, unit, target);
+
+            if (converted >= 0.001) {
+                steps.push({
+                    label,
+                    value: converted,
+                    unit: target,
+                    description: weightDescription(value, unit)
+                });
+            }
+        });
+    }
+
+    if (category === "data") {
+        const targets = [
+            ["mb", "Megabytes"],
+            ["gb", "Gigabytes"],
+            ["tb", "Terabytes"],
+            ["pb", "Petabytes"]
+        ];
+
+        targets.forEach(([target, label]) => {
+            if (target === unit) return;
+
+            const converted = convertBetween(value, unit, target);
+
+            if (converted >= 0.0001) {
+                steps.push({
+                    label,
+                    value: converted,
+                    unit: target,
+                    description: dataDescription(value, unit)
+                });
+            }
+        });
+    }
+
+    if (category === "money") {
+        ["usd", "eur", "gbp"].forEach((target) => {
+            if (target === unit) return;
+
+            const converted = convertBetween(value, unit, target);
+
+            steps.push({
+                label: units[target].label,
+                value: converted,
+                unit: target,
+                description: moneyDescription(value, unit)
+            });
+        });
+    }
+
+    if (category === "calories") {
+        steps.push({
+            label: "Daily energy",
+            value: value / 2500,
+            unit: "days",
+            customValue: `${formatNumber(value / 2500, 1)} days`,
+            description: "Compared with a simplified 2,500 calorie daily reference."
+        });
+    }
+
+    if (category === "energy") {
+        const kwh = convertBetween(value, unit, "kwh");
+
+        steps.push({
+            label: "Kilowatt-hours",
+            value: kwh,
+            unit: "kwh",
+            description: energyDescription(value, unit)
+        });
+    }
+
+    journey.innerHTML = steps.map((step, index) => {
+        const displayValue = step.customValue ||
+            `${formatNumber(step.value, getDecimalPlaces(step.value))} ${units[step.unit]?.short || step.unit}`;
+
+        return `
+            <article class="conversion-step" style="animation-delay:${index * 70}ms">
+                <div class="step-label">${escapeHTML(step.label)}</div>
+                <div class="step-value">${escapeHTML(displayValue)}</div>
+                <div class="step-description">
+                    ${escapeHTML(step.description)}
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+function getDecimalPlaces(value) {
+    const absolute = Math.abs(value);
+
+    if (absolute >= 1000000) return 1;
+    if (absolute >= 1000) return 2;
+    if (absolute >= 1) return 2;
+    return 4;
+}
+
+function getOriginalDescription(value, unit) {
+    const category = units[unit].category;
+
+    switch (category) {
+        case "time":
+            return timeDescription(value, unit);
+
+        case "distance":
+            return distanceDescription(value, unit);
+
+        case "weight":
+            return weightDescription(value, unit);
+
+        case "data":
+            return dataDescription(value, unit);
+
+        case "calories":
+            return caloriesDescription(value, unit);
+
+        case "energy":
+            return energyDescription(value, unit);
+
+        case "money":
+            return moneyDescription(value, unit);
+
+        default:
+            return "";
+    }
+}
+
+/* =========================================================
+   COMPARISONS
+========================================================= */
+
+function buildComparisons(value, unit) {
+    const category = units[unit].category;
+    const grid = $("#comparisonGrid");
+
+    if (!grid) return;
+
+    let comparisons = [];
+
+    if (category === "time") {
+        comparisons = timeComparisons(value, unit);
+    }
+
+    if (category === "money") {
+        comparisons = moneyComparisons(value, unit);
+    }
+
+    if (category === "distance") {
+        comparisons = distanceComparisons(value, unit);
+    }
+
+    if (category === "weight") {
+        comparisons = weightComparisons(value, unit);
+    }
+
+    if (category === "calories") {
+        comparisons = calorieComparisons(value, unit);
+    }
+
+    if (category === "data") {
+        comparisons = dataComparisons(value, unit);
+    }
+
+    if (category === "energy") {
+        comparisons = energyComparisons(value, unit);
+    }
+
+    grid.innerHTML = comparisons.slice(0, 6).map((item) => `
+        <article class="comparison-card">
+            <div class="comparison-icon">${item.icon}</div>
+
+            <div>
+                <div class="comparison-label">${escapeHTML(item.label)}</div>
+                <div class="comparison-value">${escapeHTML(item.value)}</div>
+                <div class="comparison-note">${escapeHTML(item.note)}</div>
+            </div>
+        </article>
+    `).join("");
+
+    weirdPool = comparisons;
+}
+
+/* =========================================================
+   TIME COMPARISONS
+========================================================= */
+
+function timeComparisons(value, unit) {
+    const hours = convertBetween(value, unit, "hours");
+    const days = hours / 24;
+
+    return [
+        {
+            icon: "♪",
+            label: "Songs",
+            value: `${formatNumber(hours * 12, 0)} songs`,
+            note: "Assuming roughly 5 minutes per song."
+        },
+        {
+            icon: "▣",
+            label: "Films",
+            value: `${formatNumber(hours / 2, 1)} films`,
+            note: "At around 2 hours per film."
+        },
+        {
+            icon: "⚽",
+            label: "Football matches",
+            value: `${formatNumber(hours / 2, 1)} matches`,
+            note: "Using a 90-minute match."
+        },
+        {
+            icon: "◷",
+            label: "Working days",
+            value: `${formatNumber(hours / 8, 1)} days`,
+            note: "Using an 8-hour working day."
+        },
+        {
+            icon: "Z",
+            label: "Sleeping",
+            value: `${formatNumber(hours / 8, 1)} nights`,
+            note: "At 8 hours of sleep per night."
+        },
+        {
+            icon: "▤",
+            label: "50-year working life",
+            value: `${formatNumber((hours / (50 * 365.25 * 24)) * 100, 2)}%`,
+            note: "Percentage of 50 years spent continuously."
+        }
+    ];
+}
+
+/* =========================================================
+   MONEY COMPARISONS
+========================================================= */
+
+function moneyComparisons(value, unit) {
+    const gbp = convertBetween(value, unit, "gbp");
+
+    return [
+        {
+            icon: "☕",
+            label: "Coffees",
+            value: `${formatNumber(gbp / assumptions.coffee, 0)} coffees`,
+            note: `At £${formatNumber(assumptions.coffee, 2)} each.`
+        },
+        {
+            icon: "▣",
+            label: "Takeaways",
+            value: `${formatNumber(gbp / assumptions.meal, 0)} meals`,
+            note: `At £${formatNumber(assumptions.meal, 2)} each.`
+        },
+        {
+            icon: "£",
+            label: "Work",
+            value: `${formatNumber(gbp / assumptions.wage, 1)} hours`,
+            note: `At £${formatNumber(assumptions.wage, 2)} per hour.`
+        },
+        {
+            icon: "⌂",
+            label: "Rent",
+            value: `${formatNumber(gbp / assumptions.rent, 1)} days`,
+            note: `At £${formatNumber(assumptions.rent, 2)} per day.`
+        },
+        {
+            icon: "◉",
+            label: "Consoles",
+            value: `${formatNumber(gbp / assumptions.console, 1)} consoles`,
+            note: `At £${formatNumber(assumptions.console, 0)} each.`
+        },
+        {
+            icon: "●",
+            label: "Big Macs",
+            value: `${formatNumber(gbp / assumptions.burger, 0)} Big Macs`,
+            note: `At £${formatNumber(assumptions.burger, 2)} each.`
+        }
+    ];
+}
+
+/* =========================================================
+   DISTANCE COMPARISONS
+========================================================= */
+
+function distanceComparisons(value, unit) {
+    const metres = convertBetween(value, unit, "metres");
+    const miles = convertBetween(value, unit, "miles");
+    const km = metres / 1000;
+
+    return [
+        {
+            icon: "•",
+            label: "Steps",
+            value: `${formatNumber(metres / assumptions.step, 0)} steps`,
+            note: `Using a ${formatNumber(assumptions.step, 2)} m average step.`
+        },
+        {
+            icon: "⚽",
+            label: "Football pitches",
+            value: `${formatNumber(metres / 105, 1)} pitches`,
+            note: "Using a 105 m pitch length."
+        },
+        {
+            icon: "🏃",
+            label: "Marathons",
+            value: `${formatNumber(km / 42.195, 2)} marathons`,
+            note: "A marathon is 42.195 km."
+        },
+        {
+            icon: "🌍",
+            label: "Around Earth",
+            value: `${formatNumber(km / 40075, 3)} times`,
+            note: "Earth's circumference is about 40,075 km."
+        },
+        {
+            icon: "🚶",
+            label: "Walking",
+            value: `${formatNumber(miles / 3, 1)} hours`,
+            note: "At roughly 3 mph walking speed."
+        },
+        {
+            icon: "🚌",
+            label: "London buses",
+            value: `${formatNumber(metres / 12, 0)} buses`,
+            note: "Using about 12 m per bus."
+        }
+    ];
+}
+
+/* =========================================================
+   WEIGHT COMPARISONS
+========================================================= */
+
+function weightComparisons(value, unit) {
+    const kg = convertBetween(value, unit, "kilograms");
+
+    return [
+        {
+            icon: "👤",
+            label: "Adults",
+            value: `${formatNumber(kg / 75, 1)} people`,
+            note: "Using a rough 75 kg reference."
+        },
+        {
+            icon: "▣",
+            label: "Sugar bags",
+            value: `${formatNumber(kg, 1)} bags`,
+            note: "Using 1 kg bags of sugar."
+        },
+        {
+            icon: "💧",
+            label: "Water",
+            value: `${formatNumber(kg, 1)} litres`,
+            note: "1 litre of water weighs about 1 kg."
+        },
+        {
+            icon: "🐕",
+            label: "Large dogs",
+            value: `${formatNumber(kg / 30, 1)} dogs`,
+            note: "Using a rough 30 kg reference."
+        },
+        {
+            icon: "▰",
+            label: "Bricks",
+            value: `${formatNumber(kg / 2.2, 0)} bricks`,
+            note: "Using about 2.2 kg per brick."
+        }
+    ];
+}
+
+/* =========================================================
+   CALORIE COMPARISONS
+========================================================= */
+
+function calorieComparisons(value, unit) {
+    const calories = convertBetween(value, unit, "calories");
+
+    return [
+        {
+            icon: "◷",
+            label: "Daily energy",
+            value: `${formatNumber(calories / 2500, 1)} days`,
+            note: "Compared with 2,500 calories per day."
+        },
+        {
+            icon: "●",
+            label: "Big Macs",
+            value: `${formatNumber(calories / 590, 1)}`,
+            note: "Very rough comparison using ~590 calories each."
+        },
+        {
+            icon: "▣",
+            label: "Chocolate bars",
+            value: `${formatNumber(calories / 230, 1)}`,
+            note: "Using roughly 230 calories per bar."
+        },
+        {
+            icon: "🍕",
+            label: "Pizza",
+            value: `${formatNumber(calories / 2000, 1)}`,
+            note: "Using roughly 2,000 calories per pizza."
+        }
+    ];
+}
+
+/* =========================================================
+   DATA COMPARISONS
+========================================================= */
+
+function dataComparisons(value, unit) {
+    const gb = convertBetween(value, unit, "gb");
+    const tb = convertBetween(value, unit, "tb");
+
+    return [
+        {
+            icon: "▧",
+            label: "Photos",
+            value: `${formatNumber((gb * 1000) / 4, 0)}`,
+            note: "Assuming roughly 4 MB per photo."
+        },
+        {
+            icon: "▶",
+            label: "HD films",
+            value: `${formatNumber(gb / 5, 1)}`,
+            note: "Assuming about 5 GB per HD film."
+        },
+        {
+            icon: "♪",
+            label: "Songs",
+            value: `${formatNumber((gb * 1000) / 5, 0)}`,
+            note: "Assuming roughly 5 MB per song."
+        },
+        {
+            icon: "◎",
+            label: "Music listening",
+            value: `${formatNumber((gb * 1000) / 5 / 12, 0)} hours`,
+            note: "Roughly 5 MB per song and 5 minutes per song."
+        },
+        {
+            icon: "▤",
+            label: "Terabytes",
+            value: `${formatNumber(tb, 3)} TB`,
+            note: "1 TB = 1,000 GB in this converter."
+        }
+    ];
+}
+
+/* =========================================================
+   ENERGY COMPARISONS
+========================================================= */
+
+function energyComparisons(value, unit) {
+    const kwh = convertBetween(value, unit, "kwh");
+
+    return [
+        {
+            icon: "▣",
+            label: "Phone charges",
+            value: `${formatNumber((kwh * 1000) / 15, 0)}`,
+            note: "Using roughly 15 Wh per full charge."
+        },
+        {
+            icon: "♨",
+            label: "Kettle boils",
+            value: `${formatNumber((kwh * 1000) / 1000, 1)}`,
+            note: "Using about 1 kWh per boil."
+        },
+        {
+            icon: "☼",
+            label: "LED bulb",
+            value: `${formatNumber((kwh * 1000) / 10, 0)} hours`,
+            note: "Using a 10 W LED bulb."
+        },
+        {
+            icon: "🚿",
+            label: "Showers",
+            value: `${formatNumber(kwh / 2.5, 1)}`,
+            note: "Using roughly 2.5 kWh per shower."
+        },
+        {
+            icon: "🚗",
+            label: "Electric car",
+            value: `${formatNumber((kwh * 1000) / 300, 1)} miles`,
+            note: "Using about 300 Wh per mile."
+        }
+    ];
+}
+
+/* =========================================================
+   WEIRD COMPARISON
+========================================================= */
+
+function generateWeirdComparison() {
+    if (!weirdPool.length) return;
+
+    let index;
+
+    do {
+        index = Math.floor(Math.random() * weirdPool.length);
+    } while (weirdPool.length > 1 && index === lastWeirdIndex);
+
+    lastWeirdIndex = index;
+
+    const item = weirdPool[index];
+
+    $("#weirdTitle").textContent = item.value;
+    $("#weirdDescription").textContent =
+        `${item.label}: ${item.note}`;
+
+    $("#weirdResult").hidden = false;
+
+    $("#weirdResult").scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
+}
+
+/* =========================================================
+   CONVERT
+========================================================= */
+
+function performConversion(updateUrl = true) {
+    const input = $("#mainInput");
+
+    if (!input) return;
+
+    const value = Number(input.value);
+
+    if (!Number.isFinite(value) || value < 0) {
+        showToast("Enter a valid number.");
+        input.focus();
+        return;
+    }
+
+    currentValue = value;
+    currentUnit = $("#unitSelect").value;
+
+    const unitInfo = units[currentUnit];
+
+    $("#resultsTitle").textContent =
+        `${formatNumber(value, 2)} ${unitInfo.short}`;
+
+    $("#results").hidden = false;
+
+    buildJourney(value, currentUnit);
+    buildComparisons(value, currentUnit);
+
+    $("#weirdResult").hidden = true;
+    lastWeirdIndex = -1;
+
+    currentResultText = buildCopyText(value, currentUnit);
+
+    if (updateUrl) {
+        updateUrlParams();
+    }
+
+    $("#results").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+/* =========================================================
+   COPY TEXT
+========================================================= */
+
+function buildCopyText(value, unit) {
+    const category = units[unit].category;
+    const original = `${formatNumber(value, 2)} ${units[unit].short}`;
+
+    let parts = [];
+
+    if (category === "time") {
+        const days = convertBetween(value, unit, "days");
+        const weeks = convertBetween(value, unit, "weeks");
+        const years = convertBetween(value, unit, "years");
+
+        parts = [
+            original,
+            `≈ ${formatNumber(days, 1)} days`,
+            `≈ ${formatNumber(weeks, 1)} weeks`,
+            `≈ ${formatNumber(years, 2)} years`
+        ];
+    }
+
+    if (category === "money") {
+        const gbp = convertBetween(value, unit, "gbp");
+
+        parts = [
+            original,
+            `≈ ${formatNumber(gbp / assumptions.coffee, 0)} coffees`,
+            `≈ ${formatNumber(gbp / assumptions.meal, 0)} takeaway meals`,
+            `≈ ${formatNumber(gbp / assumptions.wage, 1)} hours of work`
+        ];
+    }
+
+    if (category === "distance") {
+        const metres = convertBetween(value, unit, "metres");
+
+        parts = [
+            original,
+            `≈ ${formatNumber(metres / assumptions.step, 0)} steps`,
+            `≈ ${formatNumber(metres / 105, 1)} football pitches`,
+            `≈ ${formatNumber(metres / 42195, 2)} marathons`
+        ];
+    }
+
+    if (category === "weight") {
+        const kg = convertBetween(value, unit, "kilograms");
+
+        parts = [
+            original,
+            `≈ ${formatNumber(kg, 1)} kg`,
+            `≈ ${formatNumber(kg / 1, 0)} bags of sugar`,
+            `≈ ${formatNumber(kg / 75, 1)} average adults`
+        ];
+    }
+
+    if (category === "calories") {
+        const calories = convertBetween(value, unit, "calories");
+
+        parts = [
+            original,
+            `≈ ${formatNumber(calories / 2500, 1)} days of 2,500 calories`,
+            `≈ ${formatNumber(calories / 590, 1)} Big Macs`
+        ];
+    }
+
+    if (category === "data") {
+        const gb = convertBetween(value, unit, "gb");
+
+        parts = [
+            original,
+            `≈ ${formatNumber((gb * 1000) / 4, 0)} photos`,
+            `≈ ${formatNumber(gb / 5, 1)} HD films`,
+            `≈ ${formatNumber((gb * 1000) / 5, 0)} songs`
+        ];
+    }
+
+    if (category === "energy") {
+        const kwh = convertBetween(value, unit, "kwh");
+
+        parts = [
+            original,
+            `≈ ${formatNumber((kwh * 1000) / 15, 0)} phone charges`,
+            `≈ ${formatNumber(kwh / 2.5, 1)} showers`,
+            `≈ ${formatNumber((kwh * 1000) / 10, 0)} hours of LED lighting`
+        ];
+    }
+
+    return parts.join(" = ");
+}
+
+/* =========================================================
+   URL PARAMS
+========================================================= */
+
+function updateUrlParams() {
+    const url = new URL(window.location.href);
+
+    url.searchParams.set("value", currentValue);
+    url.searchParams.set("unit", currentUnit);
+
+    history.replaceState({}, "", url);
+}
+
+function loadFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    const value = Number(params.get("value"));
+    const unit = params.get("unit");
+
+    if (
+        Number.isFinite(value) &&
+        value >= 0 &&
+        unit &&
+        units[unit]
+    ) {
+        $("#mainInput").value = value;
+        populateUnits(unit);
+        performConversion(false);
+        return true;
+    }
+
+    return false;
+}
+
+/* =========================================================
+   CLIPBOARD
+========================================================= */
+
+async function copyText(text, message = "Copied.") {
+    try {
+        await navigator.clipboard.writeText(text);
+        showToast(message);
+        return;
+    } catch {
+        const textarea = document.createElement("textarea");
+
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            document.execCommand("copy");
+            showToast(message);
+        } catch {
+            showToast("Couldn't copy automatically.");
+        }
+
+        textarea.remove();
+    }
+}
+
+/* =========================================================
+   SHARE
+========================================================= */
+
+async function shareResult() {
+    const url = window.location.href;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: "Everything Converter",
+                text: currentResultText,
+                url
+            });
+
+            return;
+        } catch {
+            return;
+        }
+    }
+
+    await copyText(url, "Link copied.");
+}
+
+/* =========================================================
+   SURPRISE ME
+========================================================= */
+
+const surprises = [
+    { value: 1000000, unit: "seconds" },
+    { value: 1000000000, unit: "seconds" },
+    { value: 100000, unit: "gbp" },
+    { value: 1000, unit: "miles" },
+    { value: 10, unit: "tb" },
+    { value: 10000, unit: "hours" },
+    { value: 500, unit: "kilograms" },
+    { value: 5000000, unit: "calories" },
+    { value: 1000000, unit: "kwh" }
+];
+
+function surpriseMe() {
+    const random =
+        surprises[Math.floor(Math.random() * surprises.length)];
+
+    $("#mainInput").value = random.value;
+    populateUnits(random.unit);
+    performConversion();
+}
+
+/* =========================================================
+   ASSUMPTIONS
+========================================================= */
+
+function readAssumptions() {
+    const fields = {
+        wage: "#assumeWage",
+        coffee: "#assumeCoffee",
+        meal: "#assumeMeal",
+        subscription: "#assumeSubscription",
+        rent: "#assumeRent",
+        console: "#assumeConsole",
+        burger: "#assumeBurger",
+        step: "#assumeStep"
+    };
+
+    Object.entries(fields).forEach(([key, selector]) => {
+        const value = Number($(selector)?.value);
+
+        if (Number.isFinite(value) && value > 0) {
+            assumptions[key] = value;
+        }
+    });
+}
+
+function applyAssumptions() {
+    readAssumptions();
+
+    if (!$("#results").hidden) {
+        buildComparisons(currentValue, currentUnit);
+        currentResultText = buildCopyText(currentValue, currentUnit);
+    }
+
+    showToast("Assumptions applied.");
+}
+
+/* =========================================================
+   ASSUMPTIONS COLLAPSE
+========================================================= */
+
+function toggleAssumptions() {
+    const content = $("#assumptionsContent");
+    const button = $("#assumptionsToggle");
+
+    const isOpen = button.getAttribute("aria-expanded") === "true";
+
+    button.setAttribute("aria-expanded", String(!isOpen));
+    button.textContent = isOpen ? "+" : "−";
+
+    content.hidden = isOpen;
+}
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function loadTheme() {
+    const saved = localStorage.getItem("everything-converter-theme");
+
+    if (saved === "dark") {
+        document.documentElement.dataset.theme = "dark";
+    } else if (saved === "light") {
+        document.documentElement.dataset.theme = "light";
+    } else {
+        const prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        if (prefersDark) {
+            document.documentElement.dataset.theme = "dark";
+        }
+    }
+
+    updateThemeIcon();
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+
+    const isDark =
+        html.dataset.theme === "dark";
+
+    html.dataset.theme = isDark ? "light" : "dark";
+
+    localStorage.setItem(
+        "everything-converter-theme",
+        html.dataset.theme
+    );
+
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const icon = $("#themeIcon");
+
+    if (!icon) return;
+
+    const isDark =
+        document.documentElement.dataset.theme === "dark";
+
+    icon.textContent = isDark ? "☀" : "☾";
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+function showToast(message) {
+    const toast = $("#toast");
+
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2200);
+}
+
+/* =========================================================
+   HTML SAFETY
+========================================================= */
 
 function escapeHTML(value) {
     return String(value)
@@ -59,2095 +1482,122 @@ function escapeHTML(value) {
 }
 
 /* =========================================================
-   CONVERSION DEFINITIONS
-   ========================================================= */
-
-const conversions = {
-    time: {
-        seconds: {
-            label: "Seconds",
-            short: "sec",
-            toBase: value => value
-        },
-
-        minutes: {
-            label: "Minutes",
-            short: "min",
-            toBase: value => value * 60
-        },
-
-        hours: {
-            label: "Hours",
-            short: "hr",
-            toBase: value => value * 3600
-        },
-
-        days: {
-            label: "Days",
-            short: "days",
-            toBase: value => value * 86400
-        },
-
-        weeks: {
-            label: "Weeks",
-            short: "weeks",
-            toBase: value => value * 604800
-        },
-
-        months: {
-            label: "Months",
-            short: "months",
-            toBase: value => value * 2629800
-        },
-
-        years: {
-            label: "Years",
-            short: "years",
-            toBase: value => value * 31557600
-        },
-
-        decades: {
-            label: "Decades",
-            short: "decades",
-            toBase: value => value * 315576000
-        },
-
-        centuries: {
-            label: "Centuries",
-            short: "centuries",
-            toBase: value => value * 3155760000
-        }
-    },
-
-    distance: {
-        metres: {
-            label: "Metres",
-            short: "m",
-            toBase: value => value
-        },
-
-        kilometres: {
-            label: "Kilometres",
-            short: "km",
-            toBase: value => value * 1000
-        },
-
-        miles: {
-            label: "Miles",
-            short: "mi",
-            toBase: value => value * 1609.344
-        },
-
-        feet: {
-            label: "Feet",
-            short: "ft",
-            toBase: value => value * 0.3048
-        },
-
-        yards: {
-            label: "Yards",
-            short: "yd",
-            toBase: value => value * 0.9144
-        },
-
-        inches: {
-            label: "Inches",
-            short: "in",
-            toBase: value => value * 0.0254
-        }
-    },
-
-    weight: {
-        grams: {
-            label: "Grams",
-            short: "g",
-            toBase: value => value
-        },
-
-        kilograms: {
-            label: "Kilograms",
-            short: "kg",
-            toBase: value => value * 1000
-        },
-
-        pounds: {
-            label: "Pounds",
-            short: "lb",
-            toBase: value => value * 453.59237
-        },
-
-        ounces: {
-            label: "Ounces",
-            short: "oz",
-            toBase: value => value * 28.349523125
-        },
-
-        tonnes: {
-            label: "Tonnes",
-            short: "t",
-            toBase: value => value * 1000000
-        }
-    },
-
-    data: {
-        bytes: {
-            label: "Bytes",
-            short: "B",
-            toBase: value => value
-        },
-
-        kilobytes: {
-            label: "Kilobytes",
-            short: "KB",
-            toBase: value => value * 1000
-        },
-
-        megabytes: {
-            label: "Megabytes",
-            short: "MB",
-            toBase: value => value * 1000000
-        },
-
-        gigabytes: {
-            label: "Gigabytes",
-            short: "GB",
-            toBase: value => value * 1000000000
-        },
-
-        terabytes: {
-            label: "Terabytes",
-            short: "TB",
-            toBase: value => value * 1000000000000
-        },
-
-        petabytes: {
-            label: "Petabytes",
-            short: "PB",
-            toBase: value => value * 1000000000000000
-        }
-    },
-
-    energy: {
-        joules: {
-            label: "Joules",
-            short: "J",
-            toBase: value => value
-        },
-
-        kilojoules: {
-            label: "Kilojoules",
-            short: "kJ",
-            toBase: value => value * 1000
-        },
-
-        calories: {
-            label: "Calories",
-            short: "kcal",
-            toBase: value => value * 4184
-        },
-
-        kilowattHours: {
-            label: "Kilowatt-hours",
-            short: "kWh",
-            toBase: value => value * 3600000
-        }
-    },
-
-    calories: {
-        calories: {
-            label: "Calories",
-            short: "kcal",
-            toBase: value => value
-        }
-    },
-
-    money: {
-        GBP: {
-            label: "British Pounds",
-            short: "£",
-            currency: "GBP"
-        },
-
-        USD: {
-            label: "US Dollars",
-            short: "$",
-            currency: "USD"
-        },
-
-        EUR: {
-            label: "Euros",
-            short: "€",
-            currency: "EUR"
-        }
-    }
-};
-
-/* =========================================================
-   ASSUMPTIONS
-   ========================================================= */
-
-const defaultAssumptions = {
-    wage: 13.45,
-    coffee: 4.00,
-    meal: 12.00,
-    subscription: 12.99,
-    rentPerDay: 30,
-    console: 479.99,
-    bigMac: 5.99,
-    cinema: 12,
-    petrolPerLitre: 1.45,
-    flight: 120,
-    phone: 799,
-
-    stepsPerMile: 2100,
-    walkingSpeedMph: 3,
-
-    bagSugarKg: 1,
-    waterLitresPerKg: 1,
-
-    photoMB: 4,
-    filmGB: 5,
-    songMB: 5,
-
-    phoneChargeWh: 15,
-    kettleWh: 100,
-    showerKWh: 2.5,
-    ledWatts: 10,
-    evWhPerMile: 300
-};
-
-let assumptions = {
-    ...defaultAssumptions
-};
-
-/* =========================================================
-   APPLICATION STATE
-   ========================================================= */
-
-const state = {
-    category: "time",
-    value: 10000,
-    unit: "hours",
-    lastResults: [],
-    lastComparisonResults: [],
-    lastInput: null
-};
-
-/* =========================================================
-   CATEGORY METADATA
-   ========================================================= */
-
-const categoryMeta = {
-    time: {
-        title: "Time",
-        description: "Turn time into something you can actually picture."
-    },
-
-    money: {
-        title: "Money",
-        description: "See what your money means in the real world."
-    },
-
-    distance: {
-        title: "Distance",
-        description: "Turn kilometres and miles into things you recognise."
-    },
-
-    weight: {
-        title: "Weight",
-        description: "Put a number into a physical perspective."
-    },
-
-    calories: {
-        title: "Calories",
-        description: "Turn energy into understandable equivalents."
-    },
-
-    data: {
-        title: "Data",
-        description: "Find out what your storage actually represents."
-    },
-
-    energy: {
-        title: "Energy",
-        description: "Translate energy into everyday actions."
-    }
-};
-
-/* =========================================================
-   TIME COMPARISONS
-   ========================================================= */
-
-const timeComparisons = [
-    {
-        name: "One-minute songs",
-        icon: "🎧",
-        calculate: seconds => seconds / 60,
-        format: value =>
-            `${formatNumber(value)} one-minute ${pluralize(value, "song")}`,
-        description: "If every song lasted exactly one minute."
-    },
-
-    {
-        name: "Two-hour films",
-        icon: "🎬",
-        calculate: seconds => seconds / 7200,
-        format: value =>
-            `${formatNumber(value)} two-hour ${pluralize(value, "film")}`,
-        description: "Using a two-hour film as a rough reference."
-    },
-
-    {
-        name: "Working days",
-        icon: "💼",
-        calculate: seconds => seconds / 28800,
-        format: value =>
-            `${formatNumber(value)} eight-hour ${pluralize(value, "working day")}`,
-        description: "Based on eight working hours per day."
-    },
-
-    {
-        name: "Sleeping nights",
-        icon: "😴",
-        calculate: seconds => seconds / 28800,
-        format: value =>
-            `${formatNumber(value)} eight-hour ${pluralize(value, "sleep")}`,
-        description: "Assuming eight hours of sleep."
-    },
-
-    {
-        name: "Weekends",
-        icon: "🗓️",
-        calculate: seconds => seconds / 172800,
-        format: value =>
-            `${formatNumber(value)} two-day ${pluralize(value, "weekend")}`,
-        description: "A weekend represented as 48 hours."
-    },
-
-    {
-        name: "Football matches",
-        icon: "⚽",
-        calculate: seconds => seconds / 5400,
-        format: value =>
-            `${formatNumber(value)} 90-minute football ${pluralize(value, "match")}`,
-        description: "Ignoring stoppage time and half-time."
-    }
-];
-
-/* =========================================================
-   MONEY COMPARISONS
-   ========================================================= */
-
-const moneyComparisons = [
-    {
-        name: "Work",
-        icon: "💼",
-        calculate: value => value / assumptions.wage,
-        format: value =>
-            `${formatNumber(value)} hours of work`,
-        description: `Using £${formatNumber(assumptions.wage, 2)}/hour.`
-    },
-
-    {
-        name: "Coffees",
-        icon: "☕",
-        calculate: value => value / assumptions.coffee,
-        format: value =>
-            `${formatNumber(value)} coffees`,
-        description: `Using £${formatNumber(assumptions.coffee, 2)} per coffee.`
-    },
-
-    {
-        name: "Takeaways",
-        icon: "🍔",
-        calculate: value => value / assumptions.meal,
-        format: value =>
-            `${formatNumber(value)} takeaway meals`,
-        description: `Using £${formatNumber(assumptions.meal, 2)} per meal.`
-    },
-
-    {
-        name: "Subscriptions",
-        icon: "📺",
-        calculate: value => value / assumptions.subscription,
-        format: value =>
-            `${formatNumber(value)} months of subscriptions`,
-        description: `Using £${formatNumber(assumptions.subscription, 2)} per month.`
-    },
-
-    {
-        name: "Rent",
-        icon: "🏠",
-        calculate: value => value / assumptions.rentPerDay,
-        format: value =>
-            `${formatNumber(value)} days of rent`,
-        description: `Using £${formatNumber(assumptions.rentPerDay, 2)} per day.`
-    },
-
-    {
-        name: "Game consoles",
-        icon: "🎮",
-        calculate: value => value / assumptions.console,
-        format: value =>
-            `${formatNumber(value, 2)} game consoles`,
-        description: `Using £${formatNumber(assumptions.console, 2)} per console.`
-    },
-
-    {
-        name: "Big Macs",
-        icon: "🍔",
-        calculate: value => value / assumptions.bigMac,
-        format: value =>
-            `${formatNumber(value)} Big Macs`,
-        description: `Using £${formatNumber(assumptions.bigMac, 2)} each.`
-    },
-
-    {
-        name: "Cinema tickets",
-        icon: "🎟️",
-        calculate: value => value / assumptions.cinema,
-        format: value =>
-            `${formatNumber(value)} cinema tickets`,
-        description: `Using £${formatNumber(assumptions.cinema, 2)} per ticket.`
-    },
-
-    {
-        name: "Flights",
-        icon: "✈️",
-        calculate: value => value / assumptions.flight,
-        format: value =>
-            `${formatNumber(value, 1)} flights`,
-        description: `Using £${formatNumber(assumptions.flight, 2)} per flight.`
-    },
-
-    {
-        name: "Phones",
-        icon: "📱",
-        calculate: value => value / assumptions.phone,
-        format: value =>
-            `${formatNumber(value, 2)} phones`,
-        description: `Using £${formatNumber(assumptions.phone, 2)} per phone.`
-    }
-];
-
-/* =========================================================
-   DISTANCE COMPARISONS
-   ========================================================= */
-
-const distanceComparisons = [
-    {
-        name: "Steps",
-        icon: "👟",
-        calculate: metres => metres / 1609.344 * assumptions.stepsPerMile,
-        format: value => `${formatNumber(value)} steps`,
-        description: "Using roughly 2,100 steps per mile."
-    },
-
-    {
-        name: "Marathons",
-        icon: "🏃",
-        calculate: metres => metres / 42195,
-        format: value => `${formatNumber(value, 2)} marathons`,
-        description: "A marathon is 42.195 km."
-    },
-
-    {
-        name: "Football pitches",
-        icon: "⚽",
-        calculate: metres => metres / 105,
-        format: value => `${formatNumber(value)} football pitches long`,
-        description: "Using 105 metres as a representative pitch length."
-    },
-
-    {
-        name: "Walking time",
-        icon: "🚶",
-        calculate: metres =>
-            (metres / 1609.344) / assumptions.walkingSpeedMph,
-        format: value => `${formatNumber(value)} hours of walking`,
-        description: `Using a ${assumptions.walkingSpeedMph} mph walking pace.`
-    },
-
-    {
-        name: "Trips around Earth",
-        icon: "🌍",
-        calculate: metres => metres / 40075000,
-        format: value => `${formatNumber(value, 4)} trips around Earth`,
-        description: "Using Earth's approximate equatorial circumference."
-    },
-
-    {
-        name: "London buses",
-        icon: "🚌",
-        calculate: metres => metres / 11,
-        format: value => `${formatNumber(value)} London buses end-to-end`,
-        description: "Using roughly 11 metres per bus."
-    }
-];
-
-/* =========================================================
-   WEIGHT COMPARISONS
-   ========================================================= */
-
-const weightComparisons = [
-    {
-        name: "Bags of sugar",
-        icon: "🍬",
-        calculate: grams => grams / (assumptions.bagSugarKg * 1000),
-        format: value => `${formatNumber(value)} 1 kg bags of sugar`,
-        description: "Using 1 kg bags as the reference."
-    },
-
-    {
-        name: "Litres of water",
-        icon: "💧",
-        calculate: grams => grams / assumptions.waterLitresPerKg / 1000,
-        format: value => `${formatNumber(value)} litres of water`,
-        description: "Water weighs approximately 1 kg per litre."
-    },
-
-    {
-        name: "Adult humans",
-        icon: "🧍",
-        calculate: grams => grams / 75000,
-        format: value => `${formatNumber(value, 2)} average-sized adults`,
-        description: "A deliberately rough 75 kg reference."
-    },
-
-    {
-        name: "Large dogs",
-        icon: "🐕",
-        calculate: grams => grams / 30000,
-        format: value => `${formatNumber(value, 2)} large dogs`,
-        description: "Using 30 kg as a rough reference."
-    },
-
-    {
-        name: "Bricks",
-        icon: "🧱",
-        calculate: grams => grams / 2200,
-        format: value => `${formatNumber(value)} standard bricks`,
-        description: "Using approximately 2.2 kg per brick."
-    }
-];
-
-/* =========================================================
-   CALORIE COMPARISONS
-   ========================================================= */
-
-const calorieComparisons = [
-    {
-        name: "Days of food",
-        icon: "🍽️",
-        calculate: calories => calories / 2500,
-        format: value => `${formatNumber(value)} days at 2,500 kcal`,
-        description: "A simplified 2,500 kcal/day reference."
-    },
-
-    {
-        name: "Big Macs",
-        icon: "🍔",
-        calculate: calories => calories / 590,
-        format: value => `${formatNumber(value)} Big Macs`,
-        description: "Approximate energy equivalent; recipes vary."
-    },
-
-    {
-        name: "Chocolate bars",
-        icon: "🍫",
-        calculate: calories => calories / 230,
-        format: value => `${formatNumber(value)} chocolate bars`,
-        description: "Using roughly 230 kcal per bar."
-    },
-
-    {
-        name: "Pizzas",
-        icon: "🍕",
-        calculate: calories => calories / 1000,
-        format: value => `${formatNumber(value)} pizzas`,
-        description: "Using roughly 1,000 kcal per pizza."
-    }
-];
-
-/* =========================================================
-   DATA COMPARISONS
-   ========================================================= */
-
-const dataComparisons = [
-    {
-        name: "Photos",
-        icon: "📸",
-        calculate: bytes => bytes / (assumptions.photoMB * 1000000),
-        format: value => `${formatNumber(value)} photos`,
-        description: `Using ${assumptions.photoMB} MB per photo.`
-    },
-
-    {
-        name: "HD films",
-        icon: "🎬",
-        calculate: bytes => bytes / (assumptions.filmGB * 1000000000),
-        format: value => `${formatNumber(value)} HD films`,
-        description: `Using ${assumptions.filmGB} GB per film.`
-    },
-
-    {
-        name: "Songs",
-        icon: "🎵",
-        calculate: bytes => bytes / (assumptions.songMB * 1000000),
-        format: value => `${formatNumber(value)} songs`,
-        description: `Using ${assumptions.songMB} MB per song.`
-    },
-
-    {
-        name: "Years of music",
-        icon: "🎧",
-        calculate: bytes =>
-            (bytes / (assumptions.songMB * 1000000) * 3.5) /
-            (24 * 365),
-        format: value => `${formatNumber(value, 2)} years of music`,
-        description: "Assuming roughly 3.5 minutes per song."
-    }
-];
-
-/* =========================================================
-   ENERGY COMPARISONS
-   ========================================================= */
-
-const energyComparisons = [
-    {
-        name: "Phone charges",
-        icon: "📱",
-        calculate: joules => joules / (assumptions.phoneChargeWh * 3600),
-        format: value => `${formatNumber(value)} phone charges`,
-        description: `Using roughly ${assumptions.phoneChargeWh} Wh per charge.`
-    },
-
-    {
-        name: "Kettle boils",
-        icon: "☕",
-        calculate: joules => joules / (assumptions.kettleWh * 3600),
-        format: value => `${formatNumber(value)} kettle boils`,
-        description: `Using roughly ${assumptions.kettleWh} Wh per boil.`
-    },
-
-    {
-        name: "Showers",
-        icon: "🚿",
-        calculate: joules =>
-            joules / (assumptions.showerKWh * 3600000),
-        format: value => `${formatNumber(value)} showers`,
-        description: `Using roughly ${assumptions.showerKWh} kWh per shower.`
-    },
-
-    {
-        name: "LED bulb hours",
-        icon: "💡",
-        calculate: joules =>
-            joules / (assumptions.ledWatts * 3600),
-        format: value => `${formatNumber(value)} hours of LED lighting`,
-        description: `Using a ${assumptions.ledWatts} W LED bulb.`
-    },
-
-    {
-        name: "Electric car miles",
-        icon: "🚗",
-        calculate: joules =>
-            joules / (assumptions.evWhPerMile * 3600),
-        format: value => `${formatNumber(value)} electric-car miles`,
-        description: `Using roughly ${assumptions.evWhPerMile} Wh per mile.`
-    }
-];
-
-/* =========================================================
-   CATEGORY COMPARISON MAP
-   ========================================================= */
-
-const comparisonMap = {
-    time: timeComparisons,
-    money: moneyComparisons,
-    distance: distanceComparisons,
-    weight: weightComparisons,
-    calories: calorieComparisons,
-    data: dataComparisons,
-    energy: energyComparisons
-};
-
-/* =========================================================
-   DOM ELEMENT LOOKUPS
-   ========================================================= */
-
-const input = $("#converter-input");
-const unitSelect = $("#unit-select");
-const categorySelect = $("#category-select");
-const convertButton = $("#convert-button");
-const resultsContainer = $("#results");
-const comparisonsContainer = $("#comparisons");
-const comparisonSection = $("#comparison-section");
-const inputLabel = $("#input-label");
-const resultTitle = $("#result-title");
-const resultSubtitle = $("#result-subtitle");
-const shareButton = $("#share-button");
-const copyButton = $("#copy-button");
-const surpriseButton = $("#surprise-button");
-const chaosButton = $("#chaos-button");
-const examplesContainer = $("#examples");
-const assumptionsPanel = $("#assumptions");
-const assumptionsToggle = $("#assumptions-toggle");
-const toast = $("#toast");
-
-/* =========================================================
-   UNIT LISTS
-   ========================================================= */
-
-function populateUnits(category) {
-    if (!unitSelect) return;
-
-    unitSelect.innerHTML = "";
-
-    const units = conversions[category];
-
-    Object.entries(units).forEach(([key, definition]) => {
-        const option = document.createElement("option");
-
-        option.value = key;
-        option.textContent = definition.label;
-
-        unitSelect.appendChild(option);
-    });
-
-    if (category === state.category && units[state.unit]) {
-        unitSelect.value = state.unit;
-    } else {
-        state.unit = Object.keys(units)[0];
-        unitSelect.value = state.unit;
-    }
-}
-
-/* =========================================================
-   CATEGORY DETECTION
-   ========================================================= */
-
-function getCategoryFromUnit(unit) {
-    for (const [category, units] of Object.entries(conversions)) {
-        if (units[unit]) return category;
-    }
-
-    return "time";
-}
-
-/* =========================================================
-   BASE CONVERSION
-   ========================================================= */
-
-function convertToBase(category, value, unit) {
-    if (category === "money") {
-        return value;
-    }
-
-    const definition = conversions[category]?.[unit];
-
-    if (!definition || typeof definition.toBase !== "function") {
-        return value;
-    }
-
-    return definition.toBase(value);
-}
-
-/* =========================================================
-   TIME RESULT GENERATION
-   ========================================================= */
-
-function generateTimeResults(seconds, originalUnit, originalValue) {
-    const results = [];
-
-    const units = [
-        ["seconds", seconds],
-        ["minutes", seconds / 60],
-        ["hours", seconds / 3600],
-        ["days", seconds / 86400],
-        ["weeks", seconds / 604800],
-        ["months", seconds / 2629800],
-        ["years", seconds / 31557600],
-        ["decades", seconds / 315576000],
-        ["centuries", seconds / 3155760000]
-    ];
-
-    const originalIndex = units.findIndex(([unit]) => unit === originalUnit);
-
-    units.forEach(([unit, value], index) => {
-        if (!Number.isFinite(value)) return;
-
-        // Keep useful conversions around the original scale.
-        // Avoid overwhelming the page with microscopic values.
-        if (value < 0.0001 && index > originalIndex) return;
-
-        if (index === originalIndex) return;
-
-        results.push({
-            type: "conversion",
-            value,
-            unit: conversions.time[unit]?.label || unit,
-            short: conversions.time[unit]?.short || unit,
-            description: getTimeDescription(unit, value)
-        });
-    });
-
-    // Keep the most useful progression.
-    return selectUsefulResults(results, 6);
-}
-
-function getTimeDescription(unit, value) {
-    switch (unit) {
-        case "seconds":
-            return "A very small slice of time.";
-
-        case "minutes":
-            return "How long it lasts in minutes.";
-
-        case "hours":
-            return "A more human-scale view.";
-
-        case "days":
-            return "Enough time to notice."
-
-        case "weeks":
-            return "Now we're talking in weeks.";
-
-        case "months":
-            return "Using an average month of about 30.44 days.";
-
-        case "years":
-            return "A full trip around the calendar.";
-
-        case "decades":
-            return "Ten-year chunks.";
-
-        case "centuries":
-            return "One century is 100 years.";
-
-        default:
-            return "";
-    }
-}
-
-/* =========================================================
-   GENERIC RESULT GENERATION
-   ========================================================= */
-
-function generateResults(category, value, unit) {
-    if (category === "time") {
-        const seconds = convertToBase(category, value, unit);
-        return generateTimeResults(seconds, unit, value);
-    }
-
-    if (category === "distance") {
-        const metres = convertToBase(category, value, unit);
-
-        return [
-            {
-                type: "conversion",
-                value: metres / 1000,
-                unit: "Kilometres",
-                short: "km",
-                description: "A metric view of the same distance."
-            },
-            {
-                type: "conversion",
-                value: metres / 1609.344,
-                unit: "Miles",
-                short: "mi",
-                description: "The equivalent distance in miles."
-            },
-            {
-                type: "conversion",
-                value: metres / 0.3048,
-                unit: "Feet",
-                short: "ft",
-                description: "The same distance measured in feet."
-            },
-            {
-                type: "conversion",
-                value: metres / 0.9144,
-                unit: "Yards",
-                short: "yd",
-                description: "The same distance measured in yards."
-            }
-        ].filter(result => result.value >= 0.0001);
-    }
-
-    if (category === "weight") {
-        const grams = convertToBase(category, value, unit);
-
-        return [
-            {
-                type: "conversion",
-                value: grams / 1000,
-                unit: "Kilograms",
-                short: "kg",
-                description: "The metric weight most people use day to day."
-            },
-            {
-                type: "conversion",
-                value: grams / 453.59237,
-                unit: "Pounds",
-                short: "lb",
-                description: "The equivalent weight in pounds."
-            },
-            {
-                type: "conversion",
-                value: grams / 28.349523125,
-                unit: "Ounces",
-                short: "oz",
-                description: "The same weight in ounces."
-            },
-            {
-                type: "conversion",
-                value: grams / 1000000,
-                unit: "Tonnes",
-                short: "t",
-                description: "Useful for much larger weights."
-            }
-        ].filter(result => result.value >= 0.0001);
-    }
-
-    if (category === "data") {
-        const bytes = convertToBase(category, value, unit);
-
-        return [
-            {
-                type: "conversion",
-                value: bytes / 1000,
-                unit: "Kilobytes",
-                short: "KB",
-                description: "1,000 bytes per kilobyte."
-            },
-            {
-                type: "conversion",
-                value: bytes / 1000000,
-                unit: "Megabytes",
-                short: "MB",
-                description: "1,000,000 bytes per megabyte."
-            },
-            {
-                type: "conversion",
-                value: bytes / 1000000000,
-                unit: "Gigabytes",
-                short: "GB",
-                description: "1 billion bytes per gigabyte."
-            },
-            {
-                type: "conversion",
-                value: bytes / 1000000000000,
-                unit: "Terabytes",
-                short: "TB",
-                description: "1 trillion bytes per terabyte."
-            }
-        ].filter(result => result.value >= 0.0001);
-    }
-
-    if (category === "energy") {
-        const joules = convertToBase(category, value, unit);
-
-        return [
-            {
-                type: "conversion",
-                value: joules / 4184,
-                unit: "Calories",
-                short: "kcal",
-                description: "The nutritional-energy equivalent."
-            },
-            {
-                type: "conversion",
-                value: joules / 3600000,
-                unit: "Kilowatt-hours",
-                short: "kWh",
-                description: "The unit commonly used on electricity bills."
-            },
-            {
-                type: "conversion",
-                value: joules / 1000,
-                unit: "Kilojoules",
-                short: "kJ",
-                description: "The metric energy unit."
-            }
-        ].filter(result => result.value >= 0.0001);
-    }
-
-    if (category === "calories") {
-        return [
-            {
-                type: "conversion",
-                value: value / 2500,
-                unit: "Days at 2,500 kcal",
-                short: "days",
-                description: "A simplified daily-energy reference."
-            },
-            {
-                type: "conversion",
-                value: value / 590,
-                unit: "Big Macs",
-                short: "Big Macs",
-                description: "Approximate energy equivalent."
-            },
-            {
-                type: "conversion",
-                value: value / 230,
-                unit: "Chocolate bars",
-                short: "bars",
-                description: "Approximate energy equivalent."
-            }
-        ];
-    }
-
-    if (category === "money") {
-        return [];
-    }
-
-    return [];
-}
-
-/* =========================================================
-   RESULT FILTERING
-   ========================================================= */
-
-function selectUsefulResults(results, maxResults = 6) {
-    if (results.length <= maxResults) return results;
-
-    return results
-        .filter(result => Number.isFinite(result.value))
-        .sort((a, b) => a.value - b.value)
-        .slice(0, maxResults);
-}
-
-/* =========================================================
-   ORIGINAL INPUT CARD
-   ========================================================= */
-
-function getOriginalDisplay(category, value, unit) {
-    if (category === "money") {
-        const currency = conversions.money[unit]?.currency || "GBP";
-
-        return formatMoney(value, currency);
-    }
-
-    if (category === "calories") {
-        return `${formatNumber(value)} calories`;
-    }
-
-    const definition = conversions[category]?.[unit];
-
-    return `${formatNumber(value)} ${definition?.label?.toLowerCase() || unit}`;
-}
-
-/* =========================================================
-   RENDER RESULT JOURNEY
-   ========================================================= */
-
-function renderResults(category, value, unit) {
-    if (!resultsContainer) return;
-
-    const results = generateResults(category, value, unit);
-
-    state.lastResults = results;
-
-    resultsContainer.innerHTML = "";
-
-    const original = document.createElement("div");
-    original.className = "result-step result-original";
-
-    original.innerHTML = `
-        <div class="result-category">YOU ENTERED</div>
-        <div class="result-value">
-            ${escapeHTML(getOriginalDisplay(category, value, unit))}
-        </div>
-    `;
-
-    resultsContainer.appendChild(original);
-
-    results.forEach((result, index) => {
-        const arrow = document.createElement("div");
-        arrow.className = "result-arrow";
-        arrow.setAttribute("aria-hidden", "true");
-        arrow.innerHTML = "↓";
-
-        resultsContainer.appendChild(arrow);
-
-        const step = document.createElement("article");
-        step.className = "result-step";
-        step.style.animationDelay = `${index * 70}ms`;
-
-        step.innerHTML = `
-            <div class="result-category">
-                ${escapeHTML(categoryMeta[category]?.title || category)}
-            </div>
-
-            <div class="result-value">
-                ${escapeHTML(formatNumber(result.value))}
-                <span>${escapeHTML(result.short)}</span>
-            </div>
-
-            <div class="result-label">
-                ${escapeHTML(result.unit)}
-            </div>
-
-            <p class="result-description">
-                ${escapeHTML(result.description || "")}
-            </p>
-        `;
-
-        resultsContainer.appendChild(step);
-    });
-
-    if (resultTitle) {
-        resultTitle.textContent =
-            category === "money"
-                ? "Here's what that money looks like."
-                : "Here's what that actually means.";
-    }
-
-    if (resultSubtitle) {
-        resultSubtitle.textContent =
-            categoryMeta[category]?.description || "";
-    }
-
-    renderComparisons(category, value, unit);
-
-    resultsContainer.classList.add("results-visible");
-
-    requestAnimationFrame(() => {
-        resultsContainer.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-    });
-}
-
-/* =========================================================
-   COMPARISONS
-   ========================================================= */
-
-function getComparisonBase(category, value, unit) {
-    if (category === "time") {
-        return convertToBase(category, value, unit);
-    }
-
-    if (category === "distance") {
-        return convertToBase(category, value, unit);
-    }
-
-    if (category === "weight") {
-        return convertToBase(category, value, unit);
-    }
-
-    if (category === "data") {
-        return convertToBase(category, value, unit);
-    }
-
-    if (category === "energy") {
-        return convertToBase(category, value, unit);
-    }
-
-    if (category === "calories") {
-        return value;
-    }
-
-    if (category === "money") {
-        return value;
-    }
-
-    return value;
-}
-
-function renderComparisons(category, value, unit) {
-    if (!comparisonsContainer) return;
-
-    const comparisonDefinitions = comparisonMap[category] || [];
-
-    const baseValue = getComparisonBase(category, value, unit);
-
-    state.lastComparisonResults = [];
-
-    comparisonsContainer.innerHTML = "";
-
-    comparisonDefinitions.forEach((comparison, index) => {
-        const calculated = comparison.calculate(baseValue);
-
-        if (!Number.isFinite(calculated) || calculated <= 0) return;
-
-        const item = {
-            ...comparison,
-            value: calculated,
-            resultText: comparison.format(calculated)
-        };
-
-        state.lastComparisonResults.push(item);
-
-        const card = document.createElement("article");
-        card.className = "comparison-card";
-        card.style.animationDelay = `${index * 70}ms`;
-
-        card.innerHTML = `
-            <div class="comparison-icon" aria-hidden="true">
-                ${comparison.icon}
-            </div>
-
-            <div class="comparison-content">
-                <div class="comparison-name">
-                    ${escapeHTML(comparison.name)}
-                </div>
-
-                <div class="comparison-result">
-                    ${escapeHTML(comparison.format(calculated))}
-                </div>
-
-                <p>
-                    ${escapeHTML(comparison.description)}
-                </p>
-            </div>
-        `;
-
-        comparisonsContainer.appendChild(card);
-    });
-
-    if (comparisonSection) {
-        comparisonSection.hidden = state.lastComparisonResults.length === 0;
-    }
-}
-
-/* =========================================================
-   CHAOS MODE
-   ========================================================= */
-
-function showRandomComparison() {
-    if (!state.lastComparisonResults.length) return;
-
-    const comparison =
-        state.lastComparisonResults[
-            Math.floor(Math.random() * state.lastComparisonResults.length)
-        ];
-
-    const existing = document.querySelector(".chaos-result");
-
-    if (existing) existing.remove();
-
-    const chaos = document.createElement("div");
-    chaos.className = "chaos-result";
-
-    chaos.innerHTML = `
-        <div class="chaos-label">OKAY... BUT WHAT DOES THAT MEAN?</div>
-
-        <div class="chaos-icon">
-            ${comparison.icon}
-        </div>
-
-        <div class="chaos-result-text">
-            ${escapeHTML(comparison.resultText)}
-        </div>
-
-        <p>
-            ${escapeHTML(comparison.description)}
-        </p>
-    `;
-
-    if (comparisonSection) {
-        comparisonSection.appendChild(chaos);
-    } else if (resultsContainer) {
-        resultsContainer.appendChild(chaos);
-    }
-
-    chaos.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
-
-/* =========================================================
-   MONEY ASSUMPTIONS
-   ========================================================= */
-
-function readAssumptionInput(id, property) {
-    const element = document.querySelector(`#${id}`);
-
-    if (!element) return;
-
-    const value = Number(element.value);
-
-    if (Number.isFinite(value) && value > 0) {
-        assumptions[property] = value;
-    }
-}
-
-function setupAssumptions() {
-    const mappings = {
-        assumptionWage: "wage",
-        assumptionCoffee: "coffee",
-        assumptionMeal: "meal",
-        assumptionSubscription: "subscription",
-        assumptionRent: "rentPerDay",
-        assumptionConsole: "console",
-        assumptionBigMac: "bigMac",
-        assumptionCinema: "cinema",
-        assumptionPetrol: "petrolPerLitre",
-        assumptionFlight: "flight",
-        assumptionPhone: "phone"
-    };
-
-    Object.entries(mappings).forEach(([id, property]) => {
-        const element = document.getElementById(id);
-
-        if (!element) return;
-
-        element.value = assumptions[property];
-
-        element.addEventListener("input", () => {
-            readAssumptionInput(id, property);
-
-            if (state.lastInput) {
-                renderComparisons(
-                    state.lastInput.category,
-                    state.lastInput.value,
-                    state.lastInput.unit
-                );
-            }
-        });
-    });
-}
-
-/* =========================================================
-   CONVERSION EXECUTION
-   ========================================================= */
-
-function runConversion() {
-    if (!input) return;
-
-    const raw = input.value
-        .replace(/,/g, "")
-        .replace(/£/g, "")
-        .trim();
-
-    const value = Number(raw);
-
-    if (!Number.isFinite(value) || value < 0) {
-        showToast("Enter a valid number.");
-        input.focus();
-        return;
-    }
-
-    const category =
-        categorySelect?.value ||
-        state.category ||
-        getCategoryFromUnit(unitSelect?.value);
-
-    const unit =
-        unitSelect?.value ||
-        state.unit;
-
-    state.category = category;
-    state.unit = unit;
-    state.value = value;
-
-    state.lastInput = {
-        category,
-        unit,
-        value
-    };
-
-    updateURL();
-
-    renderResults(category, value, unit);
-}
-
-/* =========================================================
-   URL SHARING
-   ========================================================= */
-
-function updateURL() {
-    const params = new URLSearchParams();
-
-    params.set("value", state.value);
-    params.set("unit", state.unit);
-    params.set("category", state.category);
-
-    const newURL =
-        `${window.location.pathname}?${params.toString()}`;
-
-    window.history.replaceState({}, "", newURL);
-}
-
-function loadFromURL() {
-    const params = new URLSearchParams(window.location.search);
-
-    const value = Number(params.get("value"));
-    const unit = params.get("unit");
-    const category = params.get("category");
-
-    if (
-        !Number.isFinite(value) ||
-        value < 0 ||
-        !category ||
-        !conversions[category]
-    ) {
-        return false;
-    }
-
-    state.category = category;
-
-    if (categorySelect) {
-        categorySelect.value = category;
-    }
-
-    populateUnits(category);
-
-    if (unit && conversions[category]?.[unit]) {
-        state.unit = unit;
-
-        if (unitSelect) {
-            unitSelect.value = unit;
-        }
-    }
-
-    if (input) {
-        input.value = value;
-    }
-
-    state.value = value;
-
-    return true;
-}
-
-/* =========================================================
-   COPY / SHARE
-   ========================================================= */
-
-function createShareText() {
-    if (!state.lastInput) return "";
-
-    const { category, value, unit } = state.lastInput;
-
-    const original = getOriginalDisplay(category, value, unit);
-
-    const comparisonText = state.lastComparisonResults
-        .slice(0, 4)
-        .map(item => item.resultText)
-        .join(" = ");
-
-    return comparisonText
-        ? `${original} = ${comparisonText}`
-        : original;
-}
-
-async function copyResult() {
-    const text = createShareText();
-
-    if (!text) {
-        showToast("Convert something first.");
-        return;
-    }
-
-    try {
-        await navigator.clipboard.writeText(text);
-        showToast("Result copied.");
-    } catch {
-        fallbackCopy(text);
-    }
-}
-
-async function shareResult() {
-    if (!state.lastInput) {
-        showToast("Convert something first.");
-        return;
-    }
-
-    const shareData = {
-        title: "Everything Converter",
-        text: createShareText(),
-        url: window.location.href
-    };
-
-    if (navigator.share) {
-        try {
-            await navigator.share(shareData);
-            return;
-        } catch (error) {
-            if (error?.name === "AbortError") return;
-        }
-    }
-
-    await copyResult();
-}
-
-function fallbackCopy(text) {
-    const textarea = document.createElement("textarea");
-
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-
-    document.body.appendChild(textarea);
-    textarea.select();
-
-    try {
-        document.execCommand("copy");
-        showToast("Result copied.");
-    } catch {
-        showToast("Copy failed.");
-    }
-
-    textarea.remove();
-}
-
-/* =========================================================
-   SURPRISE ME
-   ========================================================= */
-
-const surprisePresets = [
-    {
-        category: "time",
-        value: 1000000,
-        unit: "seconds"
-    },
-
-    {
-        category: "time",
-        value: 10000,
-        unit: "hours"
-    },
-
-    {
-        category: "money",
-        value: 100,
-        unit: "GBP"
-    },
-
-    {
-        category: "money",
-        value: 1000,
-        unit: "GBP"
-    },
-
-    {
-        category: "distance",
-        value: 500,
-        unit: "miles"
-    },
-
-    {
-        category: "distance",
-        value: 10,
-        unit: "miles"
-    },
-
-    {
-        category: "weight",
-        value: 100,
-        unit: "kilograms"
-    },
-
-    {
-        category: "calories",
-        value: 10000,
-        unit: "calories"
-    },
-
-    {
-        category: "data",
-        value: 1,
-        unit: "terabytes"
-    },
-
-    {
-        category: "energy",
-        value: 1,
-        unit: "kilowattHours"
-    }
-];
-
-function surpriseMe() {
-    const preset =
-        surprisePresets[
-            Math.floor(Math.random() * surprisePresets.length)
-        ];
-
-    if (categorySelect) {
-        categorySelect.value = preset.category;
-    }
-
-    populateUnits(preset.category);
-
-    if (unitSelect) {
-        unitSelect.value = preset.unit;
-    }
-
-    if (input) {
-        input.value = preset.value;
-    }
-
-    runConversion();
-}
-
-/* =========================================================
-   EXAMPLE BUTTONS
-   ========================================================= */
-
-const examplePresets = [
-    {
-        label: "10,000 hours",
-        category: "time",
-        value: 10000,
-        unit: "hours"
-    },
-
-    {
-        label: "£1,000",
-        category: "money",
-        value: 1000,
-        unit: "GBP"
-    },
-
-    {
-        label: "500 miles",
-        category: "distance",
-        value: 500,
-        unit: "miles"
-    },
-
-    {
-        label: "1 TB",
-        category: "data",
-        value: 1,
-        unit: "terabytes"
-    },
-
-    {
-        label: "10,000 calories",
-        category: "calories",
-        value: 10000,
-        unit: "calories"
-    }
-];
-
-function setupExamples() {
-    if (!examplesContainer) return;
-
-    examplesContainer.innerHTML = "";
-
-    examplePresets.forEach(example => {
-        const button = document.createElement("button");
-
-        button.type = "button";
-        button.className = "example-chip";
-        button.textContent = example.label;
-
+   EXAMPLES
+========================================================= */
+
+function setupExampleButtons() {
+    $$(".example-chip").forEach((button) => {
         button.addEventListener("click", () => {
-            if (categorySelect) {
-                categorySelect.value = example.category;
+            const value = Number(button.dataset.value);
+            const unit = button.dataset.unit;
+
+            $("#mainInput").value = value;
+
+            if (units[unit]) {
+                populateUnits(unit);
             }
 
-            populateUnits(example.category);
-
-            if (unitSelect) {
-                unitSelect.value = example.unit;
-            }
-
-            if (input) {
-                input.value = example.value;
-            }
-
-            runConversion();
-        });
-
-        examplesContainer.appendChild(button);
-    });
-}
-
-/* =========================================================
-   CATEGORY EVENTS
-   ========================================================= */
-
-function setupCategoryEvents() {
-    if (!categorySelect) return;
-
-    categorySelect.addEventListener("change", () => {
-        const category = categorySelect.value;
-
-        state.category = category;
-
-        populateUnits(category);
-
-        const firstUnit = Object.keys(conversions[category])[0];
-
-        state.unit = firstUnit;
-
-        if (unitSelect) {
-            unitSelect.value = firstUnit;
-        }
-
-        updateInputLabel(category);
-    });
-}
-
-function updateInputLabel(category) {
-    if (!inputLabel) return;
-
-    const meta = categoryMeta[category];
-
-    inputLabel.textContent =
-        meta?.title
-            ? `${meta.title} amount`
-            : "Amount";
-}
-
-/* =========================================================
-   ASSUMPTIONS PANEL
-   ========================================================= */
-
-function setupAssumptionsToggle() {
-    if (!assumptionsToggle || !assumptionsPanel) return;
-
-    assumptionsToggle.addEventListener("click", () => {
-        const expanded =
-            assumptionsToggle.getAttribute("aria-expanded") === "true";
-
-        assumptionsToggle.setAttribute(
-            "aria-expanded",
-            String(!expanded)
-        );
-
-        assumptionsPanel.classList.toggle("is-open", !expanded);
-    });
-}
-
-/* =========================================================
-   TOAST
-   ========================================================= */
-
-let toastTimeout;
-
-function showToast(message) {
-    if (!toast) {
-        console.log(message);
-        return;
-    }
-
-    toast.textContent = message;
-    toast.classList.add("show");
-
-    clearTimeout(toastTimeout);
-
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2200);
-}
-
-/* =========================================================
-   KEYBOARD SUPPORT
-   ========================================================= */
-
-function setupKeyboard() {
-    if (!input) return;
-
-    input.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            runConversion();
-        }
-    });
-}
-
-/* =========================================================
-   DARK / LIGHT MODE
-   ========================================================= */
-
-function setupTheme() {
-    const themeButton =
-        $("#theme-toggle") ||
-        $("[data-theme-toggle]");
-
-    if (!themeButton) return;
-
-    const storedTheme =
-        localStorage.getItem("everything-converter-theme");
-
-    if (storedTheme) {
-        document.documentElement.dataset.theme = storedTheme;
-    }
-
-    themeButton.addEventListener("click", () => {
-        const current =
-            document.documentElement.dataset.theme || "dark";
-
-        const next =
-            current === "dark"
-                ? "light"
-                : "dark";
-
-        document.documentElement.dataset.theme = next;
-
-        localStorage.setItem(
-            "everything-converter-theme",
-            next
-        );
-    });
-}
-
-/* =========================================================
-   SMOOTH NUMBER ANIMATION
-   ========================================================= */
-
-function animateNumbers() {
-    const numberElements =
-        $$(".count-up");
-
-    numberElements.forEach(element => {
-        const target = Number(element.dataset.target);
-
-        if (!Number.isFinite(target)) return;
-
-        const duration = 650;
-        const startTime = performance.now();
-
-        function frame(now) {
-            const progress =
-                clamp(
-                    (now - startTime) / duration,
-                    0,
-                    1
-                );
-
-            const eased =
-                1 - Math.pow(1 - progress, 3);
-
-            const current =
-                target * eased;
-
-            element.textContent =
-                formatNumber(current);
-
-            if (progress < 1) {
-                requestAnimationFrame(frame);
-            }
-        }
-
-        requestAnimationFrame(frame);
-    });
-}
-
-/* =========================================================
-   EXPLORE PRESETS
-   ========================================================= */
-
-function setupExplorePresets() {
-    const presetElements =
-        $("[data-convert-value]");
-
-    if (!presetElements) return;
-
-    $$( "[data-convert-value]" ).forEach(element => {
-        element.addEventListener("click", () => {
-            const value = Number(
-                element.dataset.convertValue
-            );
-
-            const category =
-                element.dataset.convertCategory;
-
-            const unit =
-                element.dataset.convertUnit;
-
-            if (
-                !Number.isFinite(value) ||
-                !category ||
-                !unit
-            ) {
-                return;
-            }
-
-            if (categorySelect) {
-                categorySelect.value = category;
-            }
-
-            populateUnits(category);
-
-            if (unitSelect) {
-                unitSelect.value = unit;
-            }
-
-            if (input) {
-                input.value = value;
-            }
-
-            runConversion();
+            performConversion();
         });
     });
 }
 
 /* =========================================================
-   NAVIGATION
-   ========================================================= */
+   EXPLORE
+========================================================= */
 
-function setupNavigation() {
-    $$("a[href^='#']").forEach(link => {
-        link.addEventListener("click", event => {
-            const targetID =
-                link.getAttribute("href");
+function setupExploreButtons() {
+    $$(".explore-card").forEach((button) => {
+        button.addEventListener("click", () => {
+            const value = Number(button.dataset.value);
+            const unit = button.dataset.unit;
 
-            if (!targetID || targetID === "#") return;
+            $("#mainInput").value = value;
 
-            const target =
-                document.querySelector(targetID);
+            if (units[unit]) {
+                populateUnits(unit);
+            }
 
-            if (!target) return;
-
-            event.preventDefault();
-
-            target.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+            performConversion();
         });
     });
 }
 
 /* =========================================================
-   FORMATTING CATEGORY-SPECIFIC OUTPUT
-   ========================================================= */
+   CATEGORY NAVIGATION
+========================================================= */
 
-function getUnitDisplay(category, unit) {
-    if (category === "money") {
-        return conversions.money[unit]?.short || unit;
-    }
-
-    if (category === "calories") {
-        return "kcal";
-    }
-
-    return conversions[category]?.[unit]?.short || unit;
+function setupUnitChange() {
+    $("#unitSelect").addEventListener("change", () => {
+        currentUnit = $("#unitSelect").value;
+        updateInputSymbol();
+    });
 }
 
 /* =========================================================
-   MONEY CURRENCY NOTE
-   ========================================================= */
-
-function renderCurrencyNotice() {
-    const notice =
-        $("#currency-notice");
-
-    if (!notice) return;
-
-    if (state.category === "money") {
-        notice.hidden = false;
-        notice.textContent =
-            "Currency comparisons use editable assumptions. Live exchange rates are not required.";
-    } else {
-        notice.hidden = true;
-    }
-}
-
-/* =========================================================
-   VALIDATION
-   ========================================================= */
-
-function validateInput() {
-    if (!input) return false;
-
-    const value =
-        Number(
-            input.value
-                .replace(/,/g, "")
-                .trim()
-        );
-
-    if (!Number.isFinite(value)) {
-        input.setAttribute("aria-invalid", "true");
-        return false;
-    }
-
-    input.removeAttribute("aria-invalid");
-
-    return true;
-}
-
-/* =========================================================
-   MAIN INITIALISATION
-   ========================================================= */
+   INITIALISE
+========================================================= */
 
 function init() {
-    if (categorySelect) {
-        categorySelect.value = state.category;
+    loadTheme();
+
+    populateUnits("hours");
+
+    $("#converterForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        performConversion();
+    });
+
+    $("#unitSelect").addEventListener("change", () => {
+        currentUnit = $("#unitSelect").value;
+        updateInputSymbol();
+    });
+
+    $("#themeToggle").addEventListener("click", toggleTheme);
+
+    $("#copyResult").addEventListener("click", () => {
+        copyText(currentResultText || buildCopyText(currentValue, currentUnit));
+    });
+
+    $("#shareResult").addEventListener("click", shareResult);
+
+    $("#weirdButton").addEventListener(
+        "click",
+        generateWeirdComparison
+    );
+
+    $("#anotherWeird").addEventListener(
+        "click",
+        generateWeirdComparison
+    );
+
+    $("#surpriseButton").addEventListener(
+        "click",
+        surpriseMe
+    );
+
+    $("#applyAssumptions").addEventListener(
+        "click",
+        applyAssumptions
+    );
+
+    $("#assumptionsToggle").addEventListener(
+        "click",
+        toggleAssumptions
+    );
+
+    setupExampleButtons();
+    setupExploreButtons();
+
+    const loaded = loadFromUrl();
+
+    if (!loaded) {
+        updateInputSymbol();
     }
-
-    populateUnits(state.category);
-
-    setupCategoryEvents();
-    setupExamples();
-    setupAssumptions();
-    setupAssumptionsToggle();
-    setupKeyboard();
-    setupTheme();
-    setupExplorePresets();
-    setupNavigation();
-
-    if (convertButton) {
-        convertButton.addEventListener("click", () => {
-            if (!validateInput()) {
-                showToast("Enter a valid number.");
-                return;
-            }
-
-            runConversion();
-        });
-    }
-
-    if (shareButton) {
-        shareButton.addEventListener("click", shareResult);
-    }
-
-    if (copyButton) {
-        copyButton.addEventListener("click", copyResult);
-    }
-
-    if (chaosButton) {
-        chaosButton.addEventListener(
-            "click",
-            showRandomComparison
-        );
-    }
-
-    if (surpriseButton) {
-        surpriseButton.addEventListener(
-            "click",
-            surpriseMe
-        );
-    }
-
-    if (unitSelect) {
-        unitSelect.addEventListener("change", () => {
-            state.unit = unitSelect.value;
-        });
-    }
-
-    if (categorySelect) {
-        categorySelect.addEventListener("change", renderCurrencyNotice);
-    }
-
-    const loadedFromURL = loadFromURL();
-
-    if (loadedFromURL) {
-        renderCurrencyNotice();
-        runConversion();
-    } else {
-        renderCurrencyNotice();
-    }
-
-    animateNumbers();
 }
 
 /* =========================================================
    START
-   ========================================================= */
+========================================================= */
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-} else {
-    init();
-}
+document.addEventListener("DOMContentLoaded", init);

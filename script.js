@@ -1,12 +1,5 @@
-/* =========================================================
-   EVERYTHING CONVERTER
-   Vanilla JS — GitHub Pages compatible
-   ========================================================= */
-
 (() => {
     "use strict";
-
-    /* ---------- Helpers ---------- */
 
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -18,11 +11,8 @@
     const resultsTitle = $("#resultsTitle");
     const conversionJourney = $("#conversionJourney");
     const comparisonGrid = $("#comparisonGrid");
-
     const inputSymbol = $("#inputSymbol");
     const toast = $("#toast");
-
-    /* ---------- Settings ---------- */
 
     const assumptions = {
         wage: 13.45,
@@ -35,285 +25,52 @@
         step: 0.75
     };
 
-    /* ---------- Units ---------- */
-
     const units = {
-        seconds: {
-            category: "time",
-            label: "Seconds",
-            symbol: "s",
-            factor: 1
-        },
-        minutes: {
-            category: "time",
-            label: "Minutes",
-            symbol: "min",
-            factor: 60
-        },
-        hours: {
-            category: "time",
-            label: "Hours",
-            symbol: "h",
-            factor: 3600
-        },
-        days: {
-            category: "time",
-            label: "Days",
-            symbol: "days",
-            factor: 86400
-        },
-        weeks: {
-            category: "time",
-            label: "Weeks",
-            symbol: "weeks",
-            factor: 604800
-        },
-        months: {
-            category: "time",
-            label: "Months",
-            symbol: "months",
-            factor: 2629800
-        },
-        years: {
-            category: "time",
-            label: "Years",
-            symbol: "years",
-            factor: 31557600
-        },
-        decades: {
-            category: "time",
-            label: "Decades",
-            symbol: "decades",
-            factor: 315576000
-        },
-        centuries: {
-            category: "time",
-            label: "Centuries",
-            symbol: "centuries",
-            factor: 3155760000
-        },
+        seconds: { category: "time", label: "Seconds", symbol: "s", factor: 1 },
+        minutes: { category: "time", label: "Minutes", symbol: "min", factor: 60 },
+        hours: { category: "time", label: "Hours", symbol: "h", factor: 3600 },
+        days: { category: "time", label: "Days", symbol: "days", factor: 86400 },
+        weeks: { category: "time", label: "Weeks", symbol: "weeks", factor: 604800 },
+        months: { category: "time", label: "Months", symbol: "months", factor: 2629800 },
+        years: { category: "time", label: "Years", symbol: "years", factor: 31557600 },
+        decades: { category: "time", label: "Decades", symbol: "decades", factor: 315576000 },
+        centuries: { category: "time", label: "Centuries", symbol: "centuries", factor: 3155760000 },
 
-        metres: {
-            category: "distance",
-            label: "Metres",
-            symbol: "m",
-            factor: 1
-        },
-        km: {
-            category: "distance",
-            label: "Kilometres",
-            symbol: "km",
-            factor: 1000
-        },
-        miles: {
-            category: "distance",
-            label: "Miles",
-            symbol: "mi",
-            factor: 1609.344
-        },
-        feet: {
-            category: "distance",
-            label: "Feet",
-            symbol: "ft",
-            factor: 0.3048
-        },
-        yards: {
-            category: "distance",
-            label: "Yards",
-            symbol: "yd",
-            factor: 0.9144
-        },
-        inches: {
-            category: "distance",
-            label: "Inches",
-            symbol: "in",
-            factor: 0.0254
-        },
+        metres: { category: "distance", label: "Metres", symbol: "m", factor: 1 },
+        km: { category: "distance", label: "Kilometres", symbol: "km", factor: 1000 },
+        miles: { category: "distance", label: "Miles", symbol: "mi", factor: 1609.344 },
+        feet: { category: "distance", label: "Feet", symbol: "ft", factor: 0.3048 },
+        yards: { category: "distance", label: "Yards", symbol: "yd", factor: 0.9144 },
+        inches: { category: "distance", label: "Inches", symbol: "in", factor: 0.0254 },
 
-        grams: {
-            category: "weight",
-            label: "Grams",
-            symbol: "g",
-            factor: 1
-        },
-        kg: {
-            category: "weight",
-            label: "Kilograms",
-            symbol: "kg",
-            factor: 1000
-        },
-        lb: {
-            category: "weight",
-            label: "Pounds",
-            symbol: "lb",
-            factor: 453.59237
-        },
-        oz: {
-            category: "weight",
-            label: "Ounces",
-            symbol: "oz",
-            factor: 28.349523125
-        },
-        tonnes: {
-            category: "weight",
-            label: "Tonnes",
-            symbol: "t",
-            factor: 1000000
-        },
+        grams: { category: "weight", label: "Grams", symbol: "g", factor: 1 },
+        kg: { category: "weight", label: "Kilograms", symbol: "kg", factor: 1000 },
+        lb: { category: "weight", label: "Pounds", symbol: "lb", factor: 453.59237 },
+        oz: { category: "weight", label: "Ounces", symbol: "oz", factor: 28.349523125 },
+        tonnes: { category: "weight", label: "Tonnes", symbol: "t", factor: 1000000 },
 
-        bytes: {
-            category: "data",
-            label: "Bytes",
-            symbol: "B",
-            factor: 1
-        },
-        kb: {
-            category: "data",
-            label: "Kilobytes",
-            symbol: "KB",
-            factor: 1000
-        },
-        mb: {
-            category: "data",
-            label: "Megabytes",
-            symbol: "MB",
-            factor: 1000000
-        },
-        gb: {
-            category: "data",
-            label: "Gigabytes",
-            symbol: "GB",
-            factor: 1000000000
-        },
-        tb: {
-            category: "data",
-            label: "Terabytes",
-            symbol: "TB",
-            factor: 1000000000000
-        },
-        pb: {
-            category: "data",
-            label: "Petabytes",
-            symbol: "PB",
-            factor: 1000000000000000
-        },
+        bytes: { category: "data", label: "Bytes", symbol: "B", factor: 1 },
+        kb: { category: "data", label: "Kilobytes", symbol: "KB", factor: 1000 },
+        mb: { category: "data", label: "Megabytes", symbol: "MB", factor: 1000000 },
+        gb: { category: "data", label: "Gigabytes", symbol: "GB", factor: 1000000000 },
+        tb: { category: "data", label: "Terabytes", symbol: "TB", factor: 1000000000000 },
+        pb: { category: "data", label: "Petabytes", symbol: "PB", factor: 1000000000000000 },
 
-        calories: {
-            category: "calories",
-            label: "Calories",
-            symbol: "kcal",
-            factor: 1
-        },
+        calories: { category: "calories", label: "Calories", symbol: "kcal", factor: 1 },
 
-        joules: {
-            category: "energy",
-            label: "Joules",
-            symbol: "J",
-            factor: 1
-        },
-        kj: {
-            category: "energy",
-            label: "Kilojoules",
-            symbol: "kJ",
-            factor: 1000
-        },
-        kwh: {
-            category: "energy",
-            label: "Kilowatt-hours",
-            symbol: "kWh",
-            factor: 3600000
-        },
+        joules: { category: "energy", label: "Joules", symbol: "J", factor: 1 },
+        kj: { category: "energy", label: "Kilojoules", symbol: "kJ", factor: 1000 },
+        kwh: { category: "energy", label: "Kilowatt-hours", symbol: "kWh", factor: 3600000 },
 
-        gbp: {
-            category: "money",
-            label: "British Pounds",
-            symbol: "£",
-            factor: 1
-        },
-        usd: {
-            category: "money",
-            label: "US Dollars",
-            symbol: "$",
-            factor: 0.74
-        },
-        eur: {
-            category: "money",
-            label: "Euros",
-            symbol: "€",
-            factor: 0.86
-        }
+        gbp: { category: "money", label: "British Pounds", symbol: "£", factor: 1 },
+        usd: { category: "money", label: "US Dollars", symbol: "$", factor: 0.74 },
+        eur: { category: "money", label: "Euros", symbol: "€", factor: 0.86 }
     };
-
-    /* ---------- Category ordering ---------- */
-
-    const categoryUnits = {
-        time: [
-            "seconds",
-            "minutes",
-            "hours",
-            "days",
-            "weeks",
-            "months",
-            "years",
-            "decades",
-            "centuries"
-        ],
-
-        distance: [
-            "metres",
-            "km",
-            "miles",
-            "feet",
-            "yards",
-            "inches"
-        ],
-
-        weight: [
-            "grams",
-            "kg",
-            "lb",
-            "oz",
-            "tonnes"
-        ],
-
-        data: [
-            "bytes",
-            "kb",
-            "mb",
-            "gb",
-            "tb",
-            "pb"
-        ],
-
-        calories: [
-            "calories"
-        ],
-
-        energy: [
-            "joules",
-            "kj",
-            "kwh"
-        ],
-
-        money: [
-            "gbp",
-            "usd",
-            "eur"
-        ]
-    };
-
-    /* ---------- Formatting ---------- */
 
     function formatNumber(number, decimals = 2) {
         if (!Number.isFinite(number)) return "—";
 
         const abs = Math.abs(number);
-
-        if (abs >= 1000000000) {
-            return number.toLocaleString("en-GB", {
-                maximumFractionDigits: 2
-            });
-        }
 
         if (abs >= 1000000) {
             return number.toLocaleString("en-GB", {
@@ -327,28 +84,21 @@
             });
         }
 
-        if (abs >= 100) decimals = Math.min(decimals, 1);
+        if (abs >= 100) {
+            decimals = Math.min(decimals, 1);
+        }
 
         return number.toLocaleString("en-GB", {
             maximumFractionDigits: decimals
         });
     }
 
-    function formatMoney(number, currency = "£") {
-        return `${currency}${number.toLocaleString("en-GB", {
-            minimumFractionDigits: number < 100 ? 2 : 0,
-            maximumFractionDigits: 2
-        })}`;
-    }
-
     function plural(value, singular, pluralForm = `${singular}s`) {
         return Math.abs(value - 1) < 0.0001 ? singular : pluralForm;
     }
 
-    /* ---------- Populate units ---------- */
-
     function populateUnits(selectedUnit = "hours") {
-        const current = selectedUnit;
+        if (!unitSelect) return;
 
         unitSelect.innerHTML = "";
 
@@ -391,14 +141,16 @@
             unitSelect.appendChild(group);
         });
 
-        if (units[current]) {
-            unitSelect.value = current;
+        if (units[selectedUnit]) {
+            unitSelect.value = selectedUnit;
         }
 
         updateInputSymbol();
     }
 
     function updateInputSymbol() {
+        if (!inputSymbol || !unitSelect) return;
+
         const unit = units[unitSelect.value];
 
         if (!unit) {
@@ -406,38 +158,19 @@
             return;
         }
 
-        if (unit.category === "money") {
-            inputSymbol.textContent = unit.symbol;
-        } else {
-            inputSymbol.textContent = "";
-        }
+        inputSymbol.textContent =
+            unit.category === "money" ? unit.symbol : "";
     }
-
-    /* ---------- Conversion ---------- */
 
     function toBase(value, unitKey) {
         const unit = units[unitKey];
-
-        if (!unit) return value;
-
-        return value * unit.factor;
+        return unit ? value * unit.factor : value;
     }
-
-    function fromBase(baseValue, unitKey) {
-        const unit = units[unitKey];
-
-        if (!unit) return baseValue;
-
-        return baseValue / unit.factor;
-    }
-
-    /* ---------- Time descriptions ---------- */
 
     function timeDescription(seconds) {
         const minutes = seconds / 60;
         const hours = seconds / 3600;
         const days = seconds / 86400;
-        const weeks = seconds / 604800;
         const years = seconds / 31557600;
 
         if (hours < 1) {
@@ -455,20 +188,21 @@
         return `About ${formatNumber(years, 2)} ${plural(years, "year")}.`;
     }
 
-    /* ---------- Journey ---------- */
-
     function buildJourney(value, unitKey) {
         const unit = units[unitKey];
+
+        if (!unit) return [];
+
         const category = unit.category;
 
-        const steps = [];
-
-        steps.push({
-            label: "Starting point",
-            value: value,
-            unit: unit.label,
-            description: `That's the amount you entered.`
-        });
+        const steps = [
+            {
+                label: "Starting point",
+                value,
+                unit: unit.label,
+                description: "That's the amount you entered."
+            }
+        ];
 
         if (category === "time") {
             const base = toBase(value, unitKey);
@@ -509,12 +243,12 @@
                 });
             }
 
-            const workingLife = 50 * 365.2425 * 24 * 3600;
-            const percentage = (base / workingLife) * 100;
+            const workingLife =
+                50 * 365.2425 * 24 * 3600;
 
             steps.push({
                 label: "Perspective",
-                value: percentage,
+                value: (base / workingLife) * 100,
                 unit: "% of a 50-year working life",
                 description: "A deliberately simplified perspective."
             });
@@ -522,6 +256,7 @@
 
         if (category === "distance") {
             const metres = toBase(value, unitKey);
+
             const km = metres / 1000;
             const miles = metres / 1609.344;
             const stepsCount = metres / assumptions.step;
@@ -548,22 +283,22 @@
                 label: "Walking",
                 value: stepsCount,
                 unit: "steps",
-                description: `Using an average step length of ${assumptions.step} m.`
+                description:
+                    `Using an average step length of ${assumptions.step} m.`
             });
 
             steps.push({
                 label: "Big scale",
                 value: metres / 1000000,
                 unit: "million metres",
-                description: "A quick way to see how large the number gets."
+                description:
+                    "A quick way to see how large the number gets."
             });
         }
 
         if (category === "weight") {
             const grams = toBase(value, unitKey);
             const kg = grams / 1000;
-            const lb = grams / 453.59237;
-            const sugarBags = kg / 1;
 
             steps.push({
                 label: "Kilograms",
@@ -574,68 +309,69 @@
 
             steps.push({
                 label: "Pounds",
-                value: lb,
+                value: grams / 453.59237,
                 unit: "lb",
                 description: "The same mass in pounds."
             });
 
             steps.push({
                 label: "Sugar",
-                value: sugarBags,
+                value: kg,
                 unit: "1 kg bags of sugar",
-                description: "Roughly, assuming a 1 kg bag."
+                description:
+                    "Roughly, assuming a 1 kg bag."
             });
 
             steps.push({
                 label: "Water",
                 value: kg,
                 unit: "litres of water",
-                description: "Water is approximately 1 kg per litre."
+                description:
+                    "Water is approximately 1 kg per litre."
             });
         }
 
         if (category === "data") {
             const bytes = toBase(value, unitKey);
 
-            const gb = bytes / 1e9;
-            const tb = bytes / 1e12;
-            const photos = bytes / 4e6;
-            const films = bytes / 5e9;
-            const songs = bytes / 5e6;
-
             steps.push({
                 label: "Gigabytes",
-                value: gb,
+                value: bytes / 1e9,
                 unit: "GB",
-                description: "The same amount of data in gigabytes."
+                description:
+                    "The same amount of data in gigabytes."
             });
 
             steps.push({
                 label: "Terabytes",
-                value: tb,
+                value: bytes / 1e12,
                 unit: "TB",
-                description: "The same amount of data in terabytes."
+                description:
+                    "The same amount of data in terabytes."
             });
 
             steps.push({
                 label: "Photos",
-                value: photos,
+                value: bytes / 4e6,
                 unit: "4 MB photos",
-                description: "Estimate using 4 MB per photo."
+                description:
+                    "Estimate using 4 MB per photo."
             });
 
             steps.push({
                 label: "HD films",
-                value: films,
+                value: bytes / 5e9,
                 unit: "5 GB films",
-                description: "Estimate using 5 GB per HD film."
+                description:
+                    "Estimate using 5 GB per HD film."
             });
 
             steps.push({
                 label: "Songs",
-                value: songs,
+                value: bytes / 5e6,
                 unit: "5 MB songs",
-                description: "Estimate using 5 MB per song."
+                description:
+                    "Estimate using 5 MB per song."
             });
         }
 
@@ -646,28 +382,32 @@
                 label: "Daily energy",
                 value: calories / 2500,
                 unit: "2,500-calorie days",
-                description: "Equivalent energy using 2,500 kcal per day."
+                description:
+                    "Equivalent energy using 2,500 kcal per day."
             });
 
             steps.push({
                 label: "Big Macs",
                 value: calories / 550,
                 unit: "Big Macs",
-                description: "Very rough energy comparison."
+                description:
+                    "Very rough energy comparison."
             });
 
             steps.push({
                 label: "Chocolate bars",
                 value: calories / 230,
                 unit: "chocolate bars",
-                description: "Estimate using 230 kcal per bar."
+                description:
+                    "Estimate using 230 kcal per bar."
             });
 
             steps.push({
                 label: "Pizza",
                 value: calories / 1000,
                 unit: "pizzas",
-                description: "Estimate using 1,000 kcal per pizza."
+                description:
+                    "Estimate using 1,000 kcal per pizza."
             });
         }
 
@@ -679,28 +419,32 @@
                 label: "Kilowatt-hours",
                 value: kwh,
                 unit: "kWh",
-                description: "The same energy in electricity terms."
+                description:
+                    "The same energy in electricity terms."
             });
 
             steps.push({
                 label: "Phone charges",
                 value: (kwh * 1000) / 15,
                 unit: "phone charges",
-                description: "Estimate using 15 Wh per full charge."
+                description:
+                    "Estimate using 15 Wh per full charge."
             });
 
             steps.push({
                 label: "Kettle boils",
                 value: (kwh * 1000) / 100,
                 unit: "kettle boils",
-                description: "Estimate using 100 Wh per boil."
+                description:
+                    "Estimate using 100 Wh per boil."
             });
 
             steps.push({
                 label: "LED bulb",
                 value: (kwh * 1000) / 10,
                 unit: "hours of a 10 W LED",
-                description: "Estimate using a 10 W LED bulb."
+                description:
+                    "Estimate using a 10 W LED bulb."
             });
         }
 
@@ -711,44 +455,49 @@
                 label: "British pounds",
                 value: gbp,
                 unit: "£",
-                description: "Using the site's approximate exchange assumptions."
+                description:
+                    "Using the site's approximate exchange assumptions."
             });
 
             steps.push({
                 label: "Work",
                 value: gbp / assumptions.wage,
                 unit: "hours of work",
-                description: `At £${assumptions.wage.toFixed(2)} per hour.`
+                description:
+                    `At £${assumptions.wage.toFixed(2)} per hour.`
             });
 
             steps.push({
                 label: "Coffee",
                 value: gbp / assumptions.coffee,
                 unit: "coffees",
-                description: `At £${assumptions.coffee.toFixed(2)} each.`
+                description:
+                    `At £${assumptions.coffee.toFixed(2)} each.`
             });
 
             steps.push({
                 label: "Takeaways",
                 value: gbp / assumptions.meal,
                 unit: "takeaway meals",
-                description: `At £${assumptions.meal.toFixed(2)} each.`
+                description:
+                    `At £${assumptions.meal.toFixed(2)} each.`
             });
 
             steps.push({
                 label: "Rent",
                 value: gbp / assumptions.rent,
                 unit: "days of rent",
-                description: `At £${assumptions.rent.toFixed(2)} per day.`
+                description:
+                    `At £${assumptions.rent.toFixed(2)} per day.`
             });
         }
 
         return steps;
     }
 
-    /* ---------- Render journey ---------- */
-
     function renderJourney(steps) {
+        if (!conversionJourney) return;
+
         conversionJourney.innerHTML = "";
 
         steps.forEach((step, index) => {
@@ -758,11 +507,15 @@
             article.style.animationDelay = `${index * 70}ms`;
 
             article.innerHTML = `
-                <div class="step-label">${escapeHTML(step.label)}</div>
+                <div class="step-label">
+                    ${escapeHTML(step.label)}
+                </div>
+
                 <div class="step-value">
                     ${formatNumber(step.value)}
                     ${escapeHTML(step.unit)}
                 </div>
+
                 <div class="step-description">
                     ${escapeHTML(step.description)}
                 </div>
@@ -771,8 +524,6 @@
             conversionJourney.appendChild(article);
         });
     }
-
-    /* ---------- Comparisons ---------- */
 
     function generateComparisons(value, unitKey) {
         const unit = units[unitKey];
@@ -974,13 +725,15 @@
                     icon: "🎧",
                     label: "Years of music",
                     value: bytes / 5e6 / 210 / 24 / 365,
-                    note: "Estimate using 5 MB songs averaging 3½ minutes."
+                    note:
+                        "Estimate using 5 MB songs averaging 3½ minutes."
                 },
                 {
                     icon: "💾",
                     label: "1 TB drives",
                     value: bytes / 1e12,
-                    note: "Same data expressed as 1 TB drives."
+                    note:
+                        "Same data expressed as 1 TB drives."
                 }
             ];
         }
@@ -1058,6 +811,8 @@
     }
 
     function renderComparisons(comparisons) {
+        if (!comparisonGrid) return;
+
         comparisonGrid.innerHTML = "";
 
         comparisons.forEach((comparison) => {
@@ -1087,176 +842,152 @@
         });
     }
 
-    /* ---------- Weird comparisons ---------- */
-
-    const weirdComparisons = [
-        {
-            label: "coffees",
-            get: (gbp) => gbp / assumptions.coffee,
-            description: () =>
-                `That's roughly ${formatNumber(
-                    currentValue / assumptions.coffee
-                )} coffees if each one costs £${assumptions.coffee.toFixed(2)}.`
-        },
-        {
-            label: "Big Macs",
-            get: (gbp) => gbp / assumptions.burger,
-            description: () =>
-                `Enough money for roughly ${formatNumber(
-                    currentValue / assumptions.burger
-                )} Big Macs at £${assumptions.burger.toFixed(2)} each.`
-        },
-        {
-            label: "football pitches",
-            get: (metres) => metres / 105,
-            description: () =>
-                `That's roughly ${formatNumber(
-                    toBase(currentValue, currentUnit) / 105
-                )} football pitches laid end-to-end.`
-        },
-        {
-            label: "steps",
-            get: (metres) => metres / assumptions.step,
-            description: () =>
-                `You'd be looking at roughly ${formatNumber(
-                    toBase(currentValue, currentUnit) / assumptions.step
-                )} steps.`
-        }
-    ];
-
     let currentValue = 10000;
     let currentUnit = "hours";
-
-    function showWeirdComparison() {
-        const category = units[currentUnit].category;
-
-        let result;
-
-        if (category === "money") {
-            const options = [
-                {
-                    title: "That's a lot of coffee.",
-                    description: `You could buy about ${formatNumber(
-                        toBase(currentValue, currentUnit) / assumptions.coffee
-                    )} coffees.`
-                },
-                {
-                    title: "That's a suspicious amount of Big Macs.",
-                    description: `At £${assumptions.burger.toFixed(
-                        2
-                    )} each, that's about ${formatNumber(
-                        toBase(currentValue, currentUnit) / assumptions.burger
-                    )} Big Macs.`
-                },
-                {
-                    title: "That's a lot of working hours.",
-                    description: `At £${assumptions.wage.toFixed(
-                        2
-                    )}/hour, that's about ${formatNumber(
-                        toBase(currentValue, currentUnit) / assumptions.wage
-                    )} hours of work.`
-                }
-            ];
-
-            result = randomItem(options);
-        } else if (category === "time") {
-            const seconds = toBase(currentValue, currentUnit);
-
-            const options = [
-                {
-                    title: "That's a lot of songs.",
-                    description: `Roughly ${formatNumber(
-                        seconds / 210
-                    )} average-length songs.`
-                },
-                {
-                    title: "That's a worrying number of films.",
-                    description: `About ${formatNumber(
-                        seconds / 7200
-                    )} two-hour films.`
-                },
-                {
-                    title: "That's a lot of sleep.",
-                    description: `Equivalent to about ${formatNumber(
-                        seconds / 28800
-                    )} eight-hour nights.`
-                }
-            ];
-
-            result = randomItem(options);
-        } else if (category === "distance") {
-            const metres = toBase(currentValue, currentUnit);
-
-            const options = [
-                {
-                    title: "That's a lot of walking.",
-                    description: `About ${formatNumber(
-                        metres / assumptions.step
-                    )} steps.`
-                },
-                {
-                    title: "That's a ridiculous number of football pitches.",
-                    description: `Roughly ${formatNumber(
-                        metres / 105
-                    )} pitches end-to-end.`
-                },
-                {
-                    title: "That's marathon territory.",
-                    description: `About ${formatNumber(
-                        metres / 42195
-                    )} marathons.`
-                }
-            ];
-
-            result = randomItem(options);
-        } else if (category === "data") {
-            const bytes = toBase(currentValue, currentUnit);
-
-            const options = [
-                {
-                    title: "That's a lot of photos.",
-                    description: `Roughly ${formatNumber(
-                        bytes / 4e6
-                    )} photos at 4 MB each.`
-                },
-                {
-                    title: "That's an unreasonable music library.",
-                    description: `Roughly ${formatNumber(
-                        bytes / 5e6
-                    )} songs at 5 MB each.`
-                },
-                {
-                    title: "That's a serious film collection.",
-                    description: `Around ${formatNumber(
-                        bytes / 5e9
-                    )} HD films at 5 GB each.`
-                }
-            ];
-
-            result = randomItem(options);
-        } else {
-            result = {
-                title: "Okay... that's getting ridiculous.",
-                description: "Try another category for a stranger comparison."
-            };
-        }
-
-        $("#weirdTitle").textContent = result.title;
-        $("#weirdDescription").textContent = result.description;
-        $("#weirdResult").hidden = false;
-        $("#weirdResult").scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-    }
 
     function randomItem(array) {
         return array[Math.floor(Math.random() * array.length)];
     }
 
-    /* ---------- Main conversion ---------- */
+    function showWeirdComparison() {
+        const unit = units[currentUnit];
 
-    function convert() {
+        if (!unit) return;
+
+        const category = unit.category;
+        let result;
+
+        if (category === "money") {
+            const gbp = toBase(currentValue, currentUnit);
+
+            result = randomItem([
+                {
+                    title: "That's a lot of coffee.",
+                    description:
+                        `You could buy about ${formatNumber(
+                            gbp / assumptions.coffee
+                        )} coffees.`
+                },
+                {
+                    title: "That's a suspicious amount of Big Macs.",
+                    description:
+                        `At £${assumptions.burger.toFixed(2)} each, that's about ${formatNumber(
+                            gbp / assumptions.burger
+                        )} Big Macs.`
+                },
+                {
+                    title: "That's a lot of working hours.",
+                    description:
+                        `At £${assumptions.wage.toFixed(2)}/hour, that's about ${formatNumber(
+                            gbp / assumptions.wage
+                        )} hours of work.`
+                }
+            ]);
+        } else if (category === "time") {
+            const seconds = toBase(currentValue, currentUnit);
+
+            result = randomItem([
+                {
+                    title: "That's a lot of songs.",
+                    description:
+                        `Roughly ${formatNumber(
+                            seconds / 210
+                        )} average-length songs.`
+                },
+                {
+                    title: "That's a worrying number of films.",
+                    description:
+                        `About ${formatNumber(
+                            seconds / 7200
+                        )} two-hour films.`
+                },
+                {
+                    title: "That's a lot of sleep.",
+                    description:
+                        `Equivalent to about ${formatNumber(
+                            seconds / 28800
+                        )} eight-hour nights.`
+                }
+            ]);
+        } else if (category === "distance") {
+            const metres = toBase(currentValue, currentUnit);
+
+            result = randomItem([
+                {
+                    title: "That's a lot of walking.",
+                    description:
+                        `About ${formatNumber(
+                            metres / assumptions.step
+                        )} steps.`
+                },
+                {
+                    title: "That's a ridiculous number of football pitches.",
+                    description:
+                        `Roughly ${formatNumber(
+                            metres / 105
+                        )} pitches end-to-end.`
+                },
+                {
+                    title: "That's marathon territory.",
+                    description:
+                        `About ${formatNumber(
+                            metres / 42195
+                        )} marathons.`
+                }
+            ]);
+        } else if (category === "data") {
+            const bytes = toBase(currentValue, currentUnit);
+
+            result = randomItem([
+                {
+                    title: "That's a lot of photos.",
+                    description:
+                        `Roughly ${formatNumber(
+                            bytes / 4e6
+                        )} photos at 4 MB each.`
+                },
+                {
+                    title: "That's an unreasonable music library.",
+                    description:
+                        `Roughly ${formatNumber(
+                            bytes / 5e6
+                        )} songs at 5 MB each.`
+                },
+                {
+                    title: "That's a serious film collection.",
+                    description:
+                        `Around ${formatNumber(
+                            bytes / 5e9
+                        )} HD films at 5 GB each.`
+                }
+            ]);
+        } else {
+            result = {
+                title: "Okay... that's getting ridiculous.",
+                description:
+                    "Try another category for a stranger comparison."
+            };
+        }
+
+        const title = $("#weirdTitle");
+        const description = $("#weirdDescription");
+        const weirdResult = $("#weirdResult");
+
+        if (!title || !description || !weirdResult) return;
+
+        title.textContent = result.title;
+        description.textContent = result.description;
+        weirdResult.hidden = false;
+
+        weirdResult.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }
+
+    function convert(shouldScroll = true) {
+        if (!mainInput || !unitSelect) return;
+
         const value = Number(mainInput.value);
         const unitKey = unitSelect.value;
 
@@ -1271,57 +1002,82 @@
 
         const unit = units[unitKey];
 
-        resultsTitle.textContent =
-            `${formatNumber(value)} ${unit.label.toLowerCase()}`;
+        if (resultsTitle) {
+            resultsTitle.textContent =
+                `${formatNumber(value)} ${unit.label.toLowerCase()}`;
+        }
 
-        const journey = buildJourney(value, unitKey);
+        renderJourney(buildJourney(value, unitKey));
+        renderComparisons(
+            generateComparisons(value, unitKey)
+        );
 
-        renderJourney(journey);
+        if (resultsSection) {
+            resultsSection.hidden = false;
 
-        const comparisons = generateComparisons(value, unitKey);
+            if (shouldScroll) {
+                resultsSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            }
+        }
 
-        renderComparisons(comparisons);
-
-        resultsSection.hidden = false;
-
-        updateURL();
-
-        resultsSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
+        /*
+         * IMPORTANT:
+         * Do not add ?value=...&unit=... to the URL.
+         * The homepage always stays:
+         *
+         * https://24uz.github.io/everything-converter/
+         */
+        resetURL();
     }
 
-    /* ---------- Copy ---------- */
+    function resetURL() {
+        const cleanPath = "/everything-converter/";
 
-    function buildCopyText() {
+        if (
+            window.location.pathname !== cleanPath ||
+            window.location.search ||
+            window.location.hash
+        ) {
+            history.replaceState(
+                null,
+                "",
+                cleanPath
+            );
+        }
+    }
+
+    async function copyResult() {
         const unit = units[currentUnit];
-
-        const journey = buildJourney(currentValue, currentUnit);
+        const journey = buildJourney(
+            currentValue,
+            currentUnit
+        );
 
         let text =
             `${formatNumber(currentValue)} ${unit.label.toLowerCase()}`;
 
         journey.slice(1, 4).forEach((step) => {
-            text += ` → ${formatNumber(step.value)} ${step.unit}`;
+            text +=
+                ` → ${formatNumber(step.value)} ${step.unit}`;
         });
 
-        return `Everything Converter\n${text}`;
-    }
-
-    async function copyResult() {
-        const text = buildCopyText();
+        const copyText =
+            `Everything Converter\n${text}`;
 
         try {
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(copyText);
             showToast("Result copied.");
         } catch {
-            fallbackCopy(text);
+            fallbackCopy(copyText);
         }
     }
 
     function fallbackCopy(text) {
-        const textarea = document.createElement("textarea");
+        const textarea =
+            document.createElement("textarea");
 
         textarea.value = text;
         textarea.style.position = "fixed";
@@ -1341,19 +1097,31 @@
         textarea.remove();
     }
 
-    /* ---------- Share ---------- */
-
     async function shareResult() {
-        const text = buildCopyText();
+        const unit = units[currentUnit];
+        const journey = buildJourney(
+            currentValue,
+            currentUnit
+        );
+
+        let text =
+            `${formatNumber(currentValue)} ${unit.label.toLowerCase()}`;
+
+        journey.slice(1, 4).forEach((step) => {
+            text +=
+                ` → ${formatNumber(step.value)} ${step.unit}`;
+        });
+
+        const shareText =
+            `Everything Converter\n${text}`;
 
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: "Everything Converter",
-                    text,
-                    url: window.location.href
+                    text: shareText,
+                    url: "https://24uz.github.io/everything-converter/"
                 });
-
                 return;
             } catch {
                 return;
@@ -1362,47 +1130,6 @@
 
         await copyResult();
     }
-
-    /* ---------- URL ---------- */
-
-    function updateURL() {
-        const params = new URLSearchParams();
-
-        params.set("value", currentValue);
-        params.set("unit", currentUnit);
-
-        history.replaceState(
-            null,
-            "",
-            `${window.location.pathname}?${params.toString()}`
-        );
-    }
-
-    function loadFromURL() {
-        const params = new URLSearchParams(window.location.search);
-
-        const value = Number(params.get("value"));
-        const unit = params.get("unit");
-
-        if (
-            Number.isFinite(value) &&
-            value >= 0 &&
-            unit &&
-            units[unit]
-        ) {
-            mainInput.value = value;
-            unitSelect.value = unit;
-
-            currentValue = value;
-            currentUnit = unit;
-
-            updateInputSymbol();
-
-            convert();
-        }
-    }
-
-    /* ---------- Surprise Me ---------- */
 
     const surprisePresets = [
         ["1000000", "seconds"],
@@ -1427,8 +1154,6 @@
         convert();
     }
 
-    /* ---------- Examples ---------- */
-
     function setupExamples() {
         $$(".example-chip").forEach((button) => {
             button.addEventListener("click", () => {
@@ -1440,8 +1165,6 @@
             });
         });
     }
-
-    /* ---------- Explore ---------- */
 
     function setupExplore() {
         $$(".explore-card").forEach((card) => {
@@ -1455,32 +1178,44 @@
         });
     }
 
-    /* ---------- Theme ---------- */
-
     function setupTheme() {
         const button = $("#themeToggle");
         const icon = $("#themeIcon");
 
         if (!button) return;
 
-        const saved = localStorage.getItem("everything-theme");
+        const saved =
+            localStorage.getItem(
+                "everything-converter-theme"
+            );
 
         if (saved === "dark") {
-            document.documentElement.dataset.theme = "dark";
+            document.documentElement.dataset.theme =
+                "dark";
         }
 
         updateThemeIcon();
 
         button.addEventListener("click", () => {
             const isDark =
-                document.documentElement.dataset.theme === "dark";
+                document.documentElement.dataset.theme ===
+                "dark";
 
             if (isDark) {
                 delete document.documentElement.dataset.theme;
-                localStorage.setItem("everything-theme", "light");
+
+                localStorage.setItem(
+                    "everything-converter-theme",
+                    "light"
+                );
             } else {
-                document.documentElement.dataset.theme = "dark";
-                localStorage.setItem("everything-theme", "dark");
+                document.documentElement.dataset.theme =
+                    "dark";
+
+                localStorage.setItem(
+                    "everything-converter-theme",
+                    "dark"
+                );
             }
 
             updateThemeIcon();
@@ -1488,9 +1223,13 @@
 
         function updateThemeIcon() {
             const isDark =
-                document.documentElement.dataset.theme === "dark";
+                document.documentElement.dataset.theme ===
+                "dark";
 
-            icon.textContent = isDark ? "☀" : "☾";
+            if (icon) {
+                icon.textContent =
+                    isDark ? "☀" : "☾";
+            }
 
             button.setAttribute(
                 "aria-label",
@@ -1501,8 +1240,6 @@
         }
     }
 
-    /* ---------- Assumptions ---------- */
-
     function setupAssumptions() {
         const toggle = $("#assumptionsToggle");
         const content = $("#assumptionsContent");
@@ -1511,7 +1248,9 @@
         if (toggle && content) {
             toggle.addEventListener("click", () => {
                 const open =
-                    toggle.getAttribute("aria-expanded") === "true";
+                    toggle.getAttribute(
+                        "aria-expanded"
+                    ) === "true";
 
                 toggle.setAttribute(
                     "aria-expanded",
@@ -1519,52 +1258,79 @@
                 );
 
                 content.hidden = open;
-                toggle.textContent = open ? "+" : "−";
+
+                toggle.textContent =
+                    open ? "+" : "−";
             });
         }
 
         if (apply) {
             apply.addEventListener("click", () => {
-                const wage = Number($("#assumeWage").value);
-                const coffee = Number($("#assumeCoffee").value);
-                const meal = Number($("#assumeMeal").value);
-                const subscription = Number(
-                    $("#assumeSubscription").value
-                );
-                const rent = Number($("#assumeRent").value);
-                const consolePrice = Number(
-                    $("#assumeConsole").value
-                );
-                const burger = Number($("#assumeBurger").value);
-                const step = Number($("#assumeStep").value);
+                const wage =
+                    Number($("#assumeWage")?.value);
+
+                const coffee =
+                    Number($("#assumeCoffee")?.value);
+
+                const meal =
+                    Number($("#assumeMeal")?.value);
+
+                const subscription =
+                    Number($("#assumeSubscription")?.value);
+
+                const rent =
+                    Number($("#assumeRent")?.value);
+
+                const consolePrice =
+                    Number($("#assumeConsole")?.value);
+
+                const burger =
+                    Number($("#assumeBurger")?.value);
+
+                const step =
+                    Number($("#assumeStep")?.value);
 
                 if (wage > 0) assumptions.wage = wage;
                 if (coffee > 0) assumptions.coffee = coffee;
                 if (meal > 0) assumptions.meal = meal;
+
                 if (subscription > 0) {
-                    assumptions.subscription = subscription;
+                    assumptions.subscription =
+                        subscription;
                 }
+
                 if (rent > 0) assumptions.rent = rent;
+
                 if (consolePrice > 0) {
-                    assumptions.console = consolePrice;
+                    assumptions.console =
+                        consolePrice;
                 }
-                if (burger > 0) assumptions.burger = burger;
-                if (step > 0) assumptions.step = step;
+
+                if (burger > 0) {
+                    assumptions.burger = burger;
+                }
+
+                if (step > 0) {
+                    assumptions.step = step;
+                }
 
                 showToast("Assumptions applied.");
 
-                if (!resultsSection.hidden) {
-                    convert();
+                if (
+                    resultsSection &&
+                    !resultsSection.hidden
+                ) {
+                    convert(false);
                 }
             });
         }
     }
 
-    /* ---------- Toast ---------- */
-
     let toastTimer;
 
     function showToast(message) {
+        if (!toast) return;
+
         toast.textContent = message;
         toast.classList.add("show");
 
@@ -1575,25 +1341,30 @@
         }, 2200);
     }
 
-    /* ---------- Keyboard ---------- */
-
     function setupKeyboard() {
-        mainInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                convert();
-            }
-        });
-    }
+        if (!mainInput) return;
 
-    /* ---------- Navigation ---------- */
+        mainInput.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    convert();
+                }
+            }
+        );
+    }
 
     function setupNavigation() {
         $$(".nav-links a").forEach((link) => {
             link.addEventListener("click", () => {
-                const target = document.querySelector(
-                    link.getAttribute("href")
-                );
+                const href =
+                    link.getAttribute("href");
+
+                if (!href || href === "#") return;
+
+                const target =
+                    document.querySelector(href);
 
                 if (target) {
                     target.scrollIntoView({
@@ -1604,8 +1375,6 @@
         });
     }
 
-    /* ---------- Escape HTML ---------- */
-
     function escapeHTML(value) {
         return String(value)
             .replaceAll("&", "&amp;")
@@ -1615,35 +1384,71 @@
             .replaceAll("'", "&#039;");
     }
 
-    /* ---------- Events ---------- */
+    /* EVENTS */
 
-    converterForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        convert();
-    });
+    if (converterForm) {
+        converterForm.addEventListener(
+            "submit",
+            (event) => {
+                event.preventDefault();
+                convert();
+            }
+        );
+    }
 
-    unitSelect.addEventListener("change", updateInputSymbol);
+    if (unitSelect) {
+        unitSelect.addEventListener(
+            "change",
+            updateInputSymbol
+        );
+    }
 
-    $("#copyResult").addEventListener("click", copyResult);
+    const copyButton = $("#copyResult");
 
-    $("#shareResult").addEventListener("click", shareResult);
+    if (copyButton) {
+        copyButton.addEventListener(
+            "click",
+            copyResult
+        );
+    }
 
-    $("#weirdButton").addEventListener(
-        "click",
-        showWeirdComparison
-    );
+    const shareButton = $("#shareResult");
 
-    $("#anotherWeird").addEventListener(
-        "click",
-        showWeirdComparison
-    );
+    if (shareButton) {
+        shareButton.addEventListener(
+            "click",
+            shareResult
+        );
+    }
 
-    $("#surpriseButton").addEventListener(
-        "click",
-        surpriseMe
-    );
+    const weirdButton = $("#weirdButton");
 
-    /* ---------- Start ---------- */
+    if (weirdButton) {
+        weirdButton.addEventListener(
+            "click",
+            showWeirdComparison
+        );
+    }
+
+    const anotherWeird = $("#anotherWeird");
+
+    if (anotherWeird) {
+        anotherWeird.addEventListener(
+            "click",
+            showWeirdComparison
+        );
+    }
+
+    const surpriseButton = $("#surpriseButton");
+
+    if (surpriseButton) {
+        surpriseButton.addEventListener(
+            "click",
+            surpriseMe
+        );
+    }
+
+    /* START */
 
     populateUnits("hours");
     setupExamples();
@@ -1653,9 +1458,19 @@
     setupKeyboard();
     setupNavigation();
 
-    loadFromURL();
-
-    if (!window.location.search) {
-        updateInputSymbol();
+    if (mainInput) {
+        mainInput.value = "10000";
     }
+
+    if (unitSelect) {
+        unitSelect.value = "hours";
+    }
+
+    updateInputSymbol();
+
+    /*
+     * Always start from the clean homepage.
+     */
+    resetURL();
+
 })();

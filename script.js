@@ -786,37 +786,37 @@
 
             return [
                 {
-                    icon: "♫",
+                    icon: "",
                     label: "Songs",
                     value: seconds / 210,
                     note: "At roughly 3½ minutes per song."
                 },
                 {
-                    icon: "▶",
+                    icon: "",
                     label: "Films",
                     value: seconds / 7200,
                     note: "Using a 2-hour film."
                 },
                 {
-                    icon: "⚽",
+                    icon: "",
                     label: "Football matches",
                     value: seconds / 5400,
                     note: "90 minutes, ignoring added time."
                 },
                 {
-                    icon: "☕",
+                    icon: "",
                     label: "Working hours",
                     value: seconds / 3600,
                     note: "Raw hours, before breaks."
                 },
                 {
-                    icon: "😴",
+                    icon: "",
                     label: "Hours of sleep",
                     value: seconds / 28800,
                     note: "Using 8 hours per night."
                 },
                 {
-                    icon: "📅",
+                    icon: "",
                     label: "Weekends",
                     value: seconds / 172800,
                     note: "Two days per weekend."
@@ -829,37 +829,37 @@
 
             return [
                 {
-                    icon: "☕",
+                    icon: "",
                     label: "Coffees",
                     value: gbp / assumptions.coffee,
                     note: `At £${assumptions.coffee.toFixed(2)} each.`
                 },
                 {
-                    icon: "🍔",
+                    icon: "",
                     label: "Big Macs",
                     value: gbp / assumptions.burger,
                     note: `At £${assumptions.burger.toFixed(2)} each.`
                 },
                 {
-                    icon: "🍕",
+                    icon: "",
                     label: "Takeaways",
                     value: gbp / assumptions.meal,
                     note: `At £${assumptions.meal.toFixed(2)} each.`
                 },
                 {
-                    icon: "💼",
+                    icon: "",
                     label: "Hours of work",
                     value: gbp / assumptions.wage,
                     note: `At £${assumptions.wage.toFixed(2)} per hour.`
                 },
                 {
-                    icon: "🏠",
+                    icon: "",
                     label: "Days of rent",
                     value: gbp / assumptions.rent,
                     note: `At £${assumptions.rent.toFixed(2)} per day.`
                 },
                 {
-                    icon: "🎮",
+                    icon: "",
                     label: "Game consoles",
                     value: gbp / assumptions.console,
                     note: `At £${assumptions.console.toFixed(0)} each.`
@@ -873,37 +873,37 @@
 
             return [
                 {
-                    icon: "👣",
+                    icon: "",
                     label: "Steps",
                     value: metres / assumptions.step,
                     note: `Using ${assumptions.step} m per step.`
                 },
                 {
-                    icon: "🏟",
+                    icon: "",
                     label: "Football pitches",
                     value: metres / 105,
                     note: "Using a 105 m pitch."
                 },
                 {
-                    icon: "🏃",
+                    icon: "",
                     label: "Marathons",
                     value: metres / 42195,
                     note: "A marathon is 42.195 km."
                 },
                 {
-                    icon: "🌍",
+                    icon: "",
                     label: "Trips around Earth",
                     value: metres / 40075017,
                     note: "Using Earth's approximate circumference."
                 },
                 {
-                    icon: "🚶",
+                    icon: "",
                     label: "Hours walking",
                     value: miles / 3,
                     note: "Using roughly 3 mph walking speed."
                 },
                 {
-                    icon: "🚌",
+                    icon: "",
                     label: "London bus lengths",
                     value: metres / 11,
                     note: "Roughly 11 m per bus."
@@ -916,31 +916,31 @@
 
             return [
                 {
-                    icon: "👤",
+                    icon: "",
                     label: "Adults",
                     value: kg / 75,
                     note: "Using 75 kg as a simple reference."
                 },
                 {
-                    icon: "🍬",
+                    icon: "",
                     label: "1 kg sugar bags",
                     value: kg,
                     note: "One bag = 1 kg."
                 },
                 {
-                    icon: "💧",
+                    icon: "",
                     label: "Litres of water",
                     value: kg,
                     note: "Approximately 1 kg per litre."
                 },
                 {
-                    icon: "🐕",
+                    icon: "",
                     label: "Large dogs",
                     value: kg / 30,
                     note: "Using 30 kg as a rough reference."
                 },
                 {
-                    icon: "🧱",
+                    icon: "",
                     label: "Bricks",
                     value: kg / 2.5,
                     note: "Using roughly 2.5 kg per brick."
@@ -953,31 +953,31 @@
 
             return [
                 {
-                    icon: "📷",
+                    icon: "",
                     label: "Photos",
                     value: bytes / 4e6,
                     note: "Estimate: 4 MB per photo."
                 },
                 {
-                    icon: "🎬",
+                    icon: "",
                     label: "HD films",
                     value: bytes / 5e9,
                     note: "Estimate: 5 GB per film."
                 },
                 {
-                    icon: "♫",
+                    icon: "",
                     label: "Songs",
                     value: bytes / 5e6,
                     note: "Estimate: 5 MB per song."
                 },
                 {
-                    icon: "🎧",
+                    icon: "",
                     label: "Years of music",
                     value: bytes / 5e6 / 210 / 24 / 365,
                     note: "Estimate using 5 MB songs averaging 3½ minutes."
                 },
                 {
-                    icon: "💾",
+                    icon: "",
                     label: "1 TB drives",
                     value: bytes / 1e12,
                     note: "Same data expressed as 1 TB drives."
@@ -990,25 +990,25 @@
 
             return [
                 {
-                    icon: "📅",
+                    icon: "",
                     label: "2,500-calorie days",
                     value: calories / 2500,
                     note: "Simple energy comparison."
                 },
                 {
-                    icon: "🍔",
+                    icon: "",
                     label: "Big Macs",
                     value: calories / 550,
                     note: "Approximate energy comparison."
                 },
                 {
-                    icon: "🍫",
+                    icon: "",
                     label: "Chocolate bars",
                     value: calories / 230,
                     note: "Approximate energy comparison."
                 },
                 {
-                    icon: "🍕",
+                    icon: "",
                     label: "Pizzas",
                     value: calories / 1000,
                     note: "Approximate energy comparison."
@@ -1022,31 +1022,31 @@
 
             return [
                 {
-                    icon: "📱",
+                    icon: "",
                     label: "Phone charges",
                     value: kwh * 1000 / 15,
                     note: "Estimate: 15 Wh per charge."
                 },
                 {
-                    icon: "♨",
+                    icon: "",
                     label: "Kettle boils",
                     value: kwh * 1000 / 100,
                     note: "Estimate: 100 Wh per boil."
                 },
                 {
-                    icon: "🚿",
+                    icon: "",
                     label: "Showers",
                     value: kwh / 2.5,
                     note: "Estimate: 2.5 kWh per shower."
                 },
                 {
-                    icon: "💡",
+                    icon: "",
                     label: "LED bulb hours",
                     value: kwh * 1000 / 10,
                     note: "Estimate using a 10 W bulb."
                 },
                 {
-                    icon: "🚗",
+                    icon: "",
                     label: "Electric car miles",
                     value: kwh / 0.3,
                     note: "Estimate using 300 Wh per mile."
@@ -1058,34 +1058,29 @@
     }
 
     function renderComparisons(comparisons) {
-        comparisonGrid.innerHTML = "";
+    comparisonGrid.innerHTML = "";
 
-        comparisons.forEach((comparison) => {
-            const card = document.createElement("article");
+    comparisons.forEach((comparison) => {
+        const card = document.createElement("article");
+        card.className = "comparison-card";
 
-            card.className = "comparison-card";
+        card.innerHTML = `
+            <div class="comparison-label">
+                ${escapeHTML(comparison.label)}
+            </div>
 
-            card.innerHTML = `
-                <div class="comparison-icon">
-                    ${comparison.icon}
-                </div>
+            <div class="comparison-value">
+                ${formatNumber(comparison.value)}
+            </div>
 
-                <div class="comparison-label">
-                    ${escapeHTML(comparison.label)}
-                </div>
+            <div class="comparison-note">
+                ${escapeHTML(comparison.note)}
+            </div>
+        `;
 
-                <div class="comparison-value">
-                    ${formatNumber(comparison.value)}
-                </div>
-
-                <div class="comparison-note">
-                    ${escapeHTML(comparison.note)}
-                </div>
-            `;
-
-            comparisonGrid.appendChild(card);
-        });
-    }
+        comparisonGrid.appendChild(card);
+    });
+}
 
     /* ---------- Weird comparisons ---------- */
 
@@ -1666,5 +1661,14 @@
     sessionStorage.clear();
 
     // Go to the completely clean homepage
+    window.location.href = "https://24uz.github.io/everything-converter/";
+})();
+
+document.querySelector(".brand").addEventListener("click", function (event) {
+    event.preventDefault();
+
+    localStorage.clear();
+    sessionStorage.clear();
+
     window.location.href = "https://24uz.github.io/everything-converter/";
 });

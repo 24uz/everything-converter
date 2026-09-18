@@ -1,5 +1,12 @@
+/* =========================================================
+   EVERYTHING CONVERTER
+   Vanilla JS — GitHub Pages compatible
+   ========================================================= */
+
 (() => {
     "use strict";
+
+    /* ---------- Helpers ---------- */
 
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -11,8 +18,11 @@
     const resultsTitle = $("#resultsTitle");
     const conversionJourney = $("#conversionJourney");
     const comparisonGrid = $("#comparisonGrid");
+
     const inputSymbol = $("#inputSymbol");
     const toast = $("#toast");
+
+    /* ---------- Settings ---------- */
 
     const assumptions = {
         wage: 13.45,
@@ -25,8 +35,9 @@
         step: 0.75
     };
 
+    /* ---------- Units ---------- */
+
     const units = {
-        // TIME
         seconds: {
             category: "time",
             label: "Seconds",
@@ -82,7 +93,6 @@
             factor: 3155760000
         },
 
-        // DISTANCE
         metres: {
             category: "distance",
             label: "Metres",
@@ -120,7 +130,6 @@
             factor: 0.0254
         },
 
-        // WEIGHT
         grams: {
             category: "weight",
             label: "Grams",
@@ -152,7 +161,6 @@
             factor: 1000000
         },
 
-        // DATA
         bytes: {
             category: "data",
             label: "Bytes",
@@ -190,7 +198,6 @@
             factor: 1000000000000000
         },
 
-        // CALORIES
         calories: {
             category: "calories",
             label: "Calories",
@@ -198,7 +205,6 @@
             factor: 1
         },
 
-        // ENERGY
         joules: {
             category: "energy",
             label: "Joules",
@@ -218,7 +224,6 @@
             factor: 3600000
         },
 
-        // MONEY
         gbp: {
             category: "money",
             label: "British Pounds",
@@ -239,7 +244,9 @@
         }
     };
 
-    const unitGroups = {
+    /* ---------- Category ordering ---------- */
+
+    const categoryUnits = {
         time: [
             "seconds",
             "minutes",
@@ -251,6 +258,7 @@
             "decades",
             "centuries"
         ],
+
         distance: [
             "metres",
             "km",
@@ -259,6 +267,7 @@
             "yards",
             "inches"
         ],
+
         weight: [
             "grams",
             "kg",
@@ -266,6 +275,7 @@
             "oz",
             "tonnes"
         ],
+
         data: [
             "bytes",
             "kb",
@@ -274,14 +284,17 @@
             "tb",
             "pb"
         ],
+
         calories: [
             "calories"
         ],
+
         energy: [
             "joules",
             "kj",
             "kwh"
         ],
+
         money: [
             "gbp",
             "usd",
@@ -289,103 +302,98 @@
         ]
     };
 
-    function formatNumber(value, decimals = 2) {
-        if (!Number.isFinite(value)) {
-            return "0";
+    /* ---------- Formatting ---------- */
+
+    function formatNumber(number, decimals = 2) {
+        if (!Number.isFinite(number)) return "—";
+
+        const abs = Math.abs(number);
+
+        if (abs >= 1000000000) {
+            return number.toLocaleString("en-GB", {
+                maximumFractionDigits: 2
+            });
         }
 
-        const absolute = Math.abs(value);
-
-        if (absolute === 0) {
-            return "0";
+        if (abs >= 1000000) {
+            return number.toLocaleString("en-GB", {
+                maximumFractionDigits: 2
+            });
         }
 
-        if (absolute >= 1000000000000) {
-            return value.toExponential(2);
-        }
-
-        if (absolute >= 1000000000) {
-            return `${(value / 1000000000).toFixed(2).replace(/\.?0+$/, "")} billion`;
-        }
-
-        if (absolute >= 1000000) {
-            return `${(value / 1000000).toFixed(2).replace(/\.?0+$/, "")} million`;
-        }
-
-        if (absolute >= 1000) {
-            return value.toLocaleString("en-GB", {
+        if (abs >= 1000) {
+            return number.toLocaleString("en-GB", {
                 maximumFractionDigits: decimals
             });
         }
 
-        if (absolute < 0.01) {
-            return value.toExponential(2);
-        }
+        if (abs >= 100) decimals = Math.min(decimals, 1);
 
-        return value.toLocaleString("en-GB", {
+        return number.toLocaleString("en-GB", {
             maximumFractionDigits: decimals
         });
     }
 
-    function formatMoney(value, symbol = "£") {
-        if (!Number.isFinite(value)) {
-            return `${symbol}0`;
-        }
-
-        return `${symbol}${value.toLocaleString("en-GB", {
-            minimumFractionDigits: 0,
+    function formatMoney(number, currency = "£") {
+        return `${currency}${number.toLocaleString("en-GB", {
+            minimumFractionDigits: number < 100 ? 2 : 0,
             maximumFractionDigits: 2
         })}`;
     }
 
-    function escapeHTML(value) {
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    function plural(value, singular, pluralForm = `${singular}s`) {
+        return Math.abs(value - 1) < 0.0001 ? singular : pluralForm;
     }
 
-    function getUnitOptions() {
-        const categoryOrder = [
-            ["time", "Time"],
-            ["distance", "Distance"],
-            ["weight", "Weight"],
-            ["data", "Data"],
-            ["calories", "Calories"],
-            ["energy", "Energy"],
-            ["money", "Money"]
-        ];
+    /* ---------- Populate units ---------- */
 
-        return categoryOrder
-            .map(([category, label]) => {
-                const options = unitGroups[category]
-                    .map((key) => {
-                        const unit = units[key];
+    function populateUnits(selectedUnit = "hours") {
+        const current = selectedUnit;
 
-                        return `
-                            <option value="${key}">
-                                ${unit.label}
-                            </option>
-                        `;
-                    })
-                    .join("");
+        unitSelect.innerHTML = "";
 
-                return `
-                    <optgroup label="${label}">
-                        ${options}
-                    </optgroup>
-                `;
-            })
-            .join("");
-    }
+        const groups = {};
 
-    function populateUnits() {
-        if (!unitSelect) return;
+        Object.keys(units).forEach((key) => {
+            const category = units[key].category;
 
-        unitSelect.innerHTML = getUnitOptions();
-        unitSelect.value = "hours";
+            if (!groups[category]) {
+                groups[category] = [];
+            }
+
+            groups[category].push(key);
+        });
+
+        const categoryNames = {
+            time: "Time",
+            money: "Money",
+            distance: "Distance",
+            weight: "Weight",
+            calories: "Calories",
+            data: "Data",
+            energy: "Energy"
+        };
+
+        Object.entries(groups).forEach(([category, keys]) => {
+            const group = document.createElement("optgroup");
+            group.label = categoryNames[category] || category;
+
+            keys.forEach((key) => {
+                const option = document.createElement("option");
+
+                option.value = key;
+                option.textContent =
+                    `${units[key].label} (${units[key].symbol})`;
+
+                group.appendChild(option);
+            });
+
+            unitSelect.appendChild(group);
+        });
+
+        if (units[current]) {
+            unitSelect.value = current;
+        }
 
         updateInputSymbol();
     }
@@ -393,271 +401,398 @@
     function updateInputSymbol() {
         const unit = units[unitSelect.value];
 
-        if (inputSymbol && unit) {
+        if (!unit) {
+            inputSymbol.textContent = "";
+            return;
+        }
+
+        if (unit.category === "money") {
             inputSymbol.textContent = unit.symbol;
+        } else {
+            inputSymbol.textContent = "";
         }
     }
 
-    function convertToBase(value, unitKey) {
+    /* ---------- Conversion ---------- */
+
+    function toBase(value, unitKey) {
         const unit = units[unitKey];
 
-        if (!unit) {
-            return value;
-        }
+        if (!unit) return value;
 
         return value * unit.factor;
     }
 
-    function convertFromBase(value, unitKey) {
+    function fromBase(baseValue, unitKey) {
         const unit = units[unitKey];
 
-        if (!unit || unit.factor === 0) {
-            return value;
-        }
+        if (!unit) return baseValue;
 
-        return value / unit.factor;
+        return baseValue / unit.factor;
     }
 
-    function renderJourney(value, unitKey) {
+    /* ---------- Time descriptions ---------- */
+
+    function timeDescription(seconds) {
+        const minutes = seconds / 60;
+        const hours = seconds / 3600;
+        const days = seconds / 86400;
+        const weeks = seconds / 604800;
+        const years = seconds / 31557600;
+
+        if (hours < 1) {
+            return `About ${formatNumber(minutes, 1)} ${plural(minutes, "minute")}.`;
+        }
+
+        if (days < 1) {
+            return `About ${formatNumber(hours, 1)} ${plural(hours, "hour")}.`;
+        }
+
+        if (years < 1) {
+            return `About ${formatNumber(days, 1)} ${plural(days, "day")}.`;
+        }
+
+        return `About ${formatNumber(years, 2)} ${plural(years, "year")}.`;
+    }
+
+    /* ---------- Journey ---------- */
+
+    function buildJourney(value, unitKey) {
         const unit = units[unitKey];
+        const category = unit.category;
 
-        if (!unit) {
-            return;
-        }
+        const steps = [];
 
-        const baseValue = convertToBase(value, unitKey);
+        steps.push({
+            label: "Starting point",
+            value: value,
+            unit: unit.label,
+            description: `That's the amount you entered.`
+        });
 
-        let journey = [];
+        if (category === "time") {
+            const base = toBase(value, unitKey);
 
-        if (unit.category === "time") {
-            journey = [
-                {
-                    label: "Seconds",
-                    value: baseValue,
-                    description: "Every moment added together."
-                },
-                {
-                    label: "Minutes",
-                    value: baseValue / 60,
-                    description: "60 seconds make a minute."
-                },
-                {
-                    label: "Hours",
-                    value: baseValue / 3600,
-                    description: "A more human-sized chunk of time."
-                },
-                {
-                    label: "Days",
-                    value: baseValue / 86400,
-                    description: "24 hours in each day."
-                },
-                {
-                    label: "Weeks",
-                    value: baseValue / 604800,
-                    description: "Seven days at a time."
-                },
-                {
-                    label: "Years",
-                    value: baseValue / 31557600,
-                    description: "Using the average Gregorian year."
-                }
+            const candidates = [
+                ["minutes", base / 60],
+                ["hours", base / 3600],
+                ["days", base / 86400],
+                ["weeks", base / 604800],
+                ["months", base / 2629800],
+                ["years", base / 31557600]
             ];
-        }
 
-        if (unit.category === "distance") {
-            journey = [
-                {
-                    label: "Millimetres",
-                    value: baseValue * 1000,
-                    description: "Tiny individual units."
-                },
-                {
-                    label: "Metres",
-                    value: baseValue,
-                    description: "The standard metric distance."
-                },
-                {
-                    label: "Kilometres",
-                    value: baseValue / 1000,
-                    description: "1,000 metres make a kilometre."
-                },
-                {
-                    label: "Miles",
-                    value: baseValue / 1609.344,
-                    description: "One mile is 1,609.344 metres."
+            candidates.forEach(([key, amount]) => {
+                if (
+                    amount >= 0.01 &&
+                    key !== unitKey &&
+                    steps.length < 5
+                ) {
+                    steps.push({
+                        label: "Same amount",
+                        value: amount,
+                        unit: units[key].label,
+                        description: timeDescription(base)
+                    });
                 }
-            ];
+            });
+
+            const workingHours = base / 3600;
+            const workingDays = workingHours / 8;
+
+            if (workingDays >= 1) {
+                steps.push({
+                    label: "Working time",
+                    value: workingDays,
+                    unit: "working days",
+                    description: "Using an 8-hour working day."
+                });
+            }
+
+            const workingLife = 50 * 365.2425 * 24 * 3600;
+            const percentage = (base / workingLife) * 100;
+
+            steps.push({
+                label: "Perspective",
+                value: percentage,
+                unit: "% of a 50-year working life",
+                description: "A deliberately simplified perspective."
+            });
         }
 
-        if (unit.category === "weight") {
-            journey = [
-                {
-                    label: "Grams",
-                    value: baseValue,
-                    description: "The basic metric unit."
-                },
-                {
-                    label: "Kilograms",
-                    value: baseValue / 1000,
-                    description: "1,000 grams make a kilogram."
-                },
-                {
-                    label: "Pounds",
-                    value: baseValue / 453.59237,
-                    description: "One pound is 453.59237 grams."
-                },
-                {
-                    label: "Tonnes",
-                    value: baseValue / 1000000,
-                    description: "One tonne is 1,000 kilograms."
-                }
-            ];
+        if (category === "distance") {
+            const metres = toBase(value, unitKey);
+            const km = metres / 1000;
+            const miles = metres / 1609.344;
+            const stepsCount = metres / assumptions.step;
+
+            if (unitKey !== "km") {
+                steps.push({
+                    label: "Distance",
+                    value: km,
+                    unit: "kilometres",
+                    description: "That's the same distance in kilometres."
+                });
+            }
+
+            if (unitKey !== "miles") {
+                steps.push({
+                    label: "Distance",
+                    value: miles,
+                    unit: "miles",
+                    description: "That's the same distance in miles."
+                });
+            }
+
+            steps.push({
+                label: "Walking",
+                value: stepsCount,
+                unit: "steps",
+                description: `Using an average step length of ${assumptions.step} m.`
+            });
+
+            steps.push({
+                label: "Big scale",
+                value: metres / 1000000,
+                unit: "million metres",
+                description: "A quick way to see how large the number gets."
+            });
         }
 
-        if (unit.category === "data") {
-            journey = [
-                {
-                    label: "Bytes",
-                    value: baseValue,
-                    description: "The smallest unit here."
-                },
-                {
-                    label: "Kilobytes",
-                    value: baseValue / 1000,
-                    description: "Using decimal storage units."
-                },
-                {
-                    label: "Megabytes",
-                    value: baseValue / 1000000,
-                    description: "1 million bytes."
-                },
-                {
-                    label: "Gigabytes",
-                    value: baseValue / 1000000000,
-                    description: "1 billion bytes."
-                },
-                {
-                    label: "Terabytes",
-                    value: baseValue / 1000000000000,
-                    description: "1 trillion bytes."
-                }
-            ];
+        if (category === "weight") {
+            const grams = toBase(value, unitKey);
+            const kg = grams / 1000;
+            const lb = grams / 453.59237;
+            const sugarBags = kg / 1;
+
+            steps.push({
+                label: "Kilograms",
+                value: kg,
+                unit: "kg",
+                description: "The same mass in kilograms."
+            });
+
+            steps.push({
+                label: "Pounds",
+                value: lb,
+                unit: "lb",
+                description: "The same mass in pounds."
+            });
+
+            steps.push({
+                label: "Sugar",
+                value: sugarBags,
+                unit: "1 kg bags of sugar",
+                description: "Roughly, assuming a 1 kg bag."
+            });
+
+            steps.push({
+                label: "Water",
+                value: kg,
+                unit: "litres of water",
+                description: "Water is approximately 1 kg per litre."
+            });
         }
 
-        if (unit.category === "calories") {
-            journey = [
-                {
-                    label: "Calories",
-                    value: baseValue,
-                    description: "Food energy measured directly."
-                },
-                {
-                    label: "Daily food budgets",
-                    value: baseValue / 2500,
-                    description: "Using 2,500 kcal as a rough daily reference."
-                },
-                {
-                    label: "Big Macs",
-                    value: baseValue / 493,
-                    description: "Roughly 493 kcal each."
-                }
-            ];
+        if (category === "data") {
+            const bytes = toBase(value, unitKey);
+
+            const gb = bytes / 1e9;
+            const tb = bytes / 1e12;
+            const photos = bytes / 4e6;
+            const films = bytes / 5e9;
+            const songs = bytes / 5e6;
+
+            steps.push({
+                label: "Gigabytes",
+                value: gb,
+                unit: "GB",
+                description: "The same amount of data in gigabytes."
+            });
+
+            steps.push({
+                label: "Terabytes",
+                value: tb,
+                unit: "TB",
+                description: "The same amount of data in terabytes."
+            });
+
+            steps.push({
+                label: "Photos",
+                value: photos,
+                unit: "4 MB photos",
+                description: "Estimate using 4 MB per photo."
+            });
+
+            steps.push({
+                label: "HD films",
+                value: films,
+                unit: "5 GB films",
+                description: "Estimate using 5 GB per HD film."
+            });
+
+            steps.push({
+                label: "Songs",
+                value: songs,
+                unit: "5 MB songs",
+                description: "Estimate using 5 MB per song."
+            });
         }
 
-        if (unit.category === "energy") {
-            journey = [
-                {
-                    label: "Joules",
-                    value: baseValue,
-                    description: "The standard SI unit of energy."
-                },
-                {
-                    label: "Kilojoules",
-                    value: baseValue / 1000,
-                    description: "1,000 joules make a kilojoule."
-                },
-                {
-                    label: "Kilowatt-hours",
-                    value: baseValue / 3600000,
-                    description: "A common household energy measure."
-                }
-            ];
+        if (category === "calories") {
+            const calories = toBase(value, unitKey);
+
+            steps.push({
+                label: "Daily energy",
+                value: calories / 2500,
+                unit: "2,500-calorie days",
+                description: "Equivalent energy using 2,500 kcal per day."
+            });
+
+            steps.push({
+                label: "Big Macs",
+                value: calories / 550,
+                unit: "Big Macs",
+                description: "Very rough energy comparison."
+            });
+
+            steps.push({
+                label: "Chocolate bars",
+                value: calories / 230,
+                unit: "chocolate bars",
+                description: "Estimate using 230 kcal per bar."
+            });
+
+            steps.push({
+                label: "Pizza",
+                value: calories / 1000,
+                unit: "pizzas",
+                description: "Estimate using 1,000 kcal per pizza."
+            });
         }
 
-        if (unit.category === "money") {
-            const gbp = baseValue;
+        if (category === "energy") {
+            const joules = toBase(value, unitKey);
+            const kwh = joules / 3600000;
 
-            journey = [
-                {
-                    label: "Pounds",
-                    value: gbp,
-                    description: "British pounds."
-                },
-                {
-                    label: "Coffees",
-                    value: gbp / assumptions.coffee,
-                    description: `Using ${formatMoney(assumptions.coffee)} per coffee.`
-                },
-                {
-                    label: "Takeaways",
-                    value: gbp / assumptions.meal,
-                    description: `Using ${formatMoney(assumptions.meal)} per takeaway.`
-                },
-                {
-                    label: "Hours of work",
-                    value: gbp / assumptions.wage,
-                    description: `Using £${assumptions.wage.toFixed(2)} per hour.`
-                }
-            ];
+            steps.push({
+                label: "Kilowatt-hours",
+                value: kwh,
+                unit: "kWh",
+                description: "The same energy in electricity terms."
+            });
+
+            steps.push({
+                label: "Phone charges",
+                value: (kwh * 1000) / 15,
+                unit: "phone charges",
+                description: "Estimate using 15 Wh per full charge."
+            });
+
+            steps.push({
+                label: "Kettle boils",
+                value: (kwh * 1000) / 100,
+                unit: "kettle boils",
+                description: "Estimate using 100 Wh per boil."
+            });
+
+            steps.push({
+                label: "LED bulb",
+                value: (kwh * 1000) / 10,
+                unit: "hours of a 10 W LED",
+                description: "Estimate using a 10 W LED bulb."
+            });
         }
 
+        if (category === "money") {
+            const gbp = toBase(value, unitKey);
+
+            steps.push({
+                label: "British pounds",
+                value: gbp,
+                unit: "£",
+                description: "Using the site's approximate exchange assumptions."
+            });
+
+            steps.push({
+                label: "Work",
+                value: gbp / assumptions.wage,
+                unit: "hours of work",
+                description: `At £${assumptions.wage.toFixed(2)} per hour.`
+            });
+
+            steps.push({
+                label: "Coffee",
+                value: gbp / assumptions.coffee,
+                unit: "coffees",
+                description: `At £${assumptions.coffee.toFixed(2)} each.`
+            });
+
+            steps.push({
+                label: "Takeaways",
+                value: gbp / assumptions.meal,
+                unit: "takeaway meals",
+                description: `At £${assumptions.meal.toFixed(2)} each.`
+            });
+
+            steps.push({
+                label: "Rent",
+                value: gbp / assumptions.rent,
+                unit: "days of rent",
+                description: `At £${assumptions.rent.toFixed(2)} per day.`
+            });
+        }
+
+        return steps;
+    }
+
+    /* ---------- Render journey ---------- */
+
+    function renderJourney(steps) {
         conversionJourney.innerHTML = "";
 
-        journey.forEach((step, index) => {
-            const element = document.createElement("div");
-            element.className = "conversion-step";
+        steps.forEach((step, index) => {
+            const article = document.createElement("article");
 
-            element.innerHTML = `
-                <div class="step-label">
-                    ${escapeHTML(step.label)}
-                </div>
+            article.className = "conversion-step";
+            article.style.animationDelay = `${index * 70}ms`;
 
+            article.innerHTML = `
+                <div class="step-label">${escapeHTML(step.label)}</div>
                 <div class="step-value">
                     ${formatNumber(step.value)}
+                    ${escapeHTML(step.unit)}
                 </div>
-
                 <div class="step-description">
                     ${escapeHTML(step.description)}
                 </div>
             `;
 
-            element.style.animationDelay = `${index * 60}ms`;
-
-            conversionJourney.appendChild(element);
+            conversionJourney.appendChild(article);
         });
     }
 
-    function createComparisons(value, unitKey) {
+    /* ---------- Comparisons ---------- */
+
+    function generateComparisons(value, unitKey) {
         const unit = units[unitKey];
 
-        if (!unit) {
-            return [];
-        }
+        if (!unit) return [];
 
-        const baseValue = convertToBase(value, unitKey);
+        const category = unit.category;
 
-        if (unit.category === "time") {
-            const seconds = baseValue;
+        if (category === "time") {
+            const seconds = toBase(value, unitKey);
 
             return [
                 {
-                    icon: "🎵",
+                    icon: "♫",
                     label: "Songs",
                     value: seconds / 210,
                     note: "At roughly 3½ minutes per song."
                 },
                 {
-                    icon: "🎬",
+                    icon: "▶",
                     label: "Films",
                     value: seconds / 7200,
                     note: "Using a 2-hour film."
@@ -669,7 +804,7 @@
                     note: "90 minutes, ignoring added time."
                 },
                 {
-                    icon: "💼",
+                    icon: "☕",
                     label: "Working hours",
                     value: seconds / 3600,
                     note: "Raw hours, before breaks."
@@ -689,27 +824,27 @@
             ];
         }
 
-        if (unit.category === "money") {
-            const gbp = baseValue;
+        if (category === "money") {
+            const gbp = toBase(value, unitKey);
 
             return [
                 {
                     icon: "☕",
                     label: "Coffees",
                     value: gbp / assumptions.coffee,
-                    note: `At ${formatMoney(assumptions.coffee)} each.`
+                    note: `At £${assumptions.coffee.toFixed(2)} each.`
                 },
                 {
                     icon: "🍔",
                     label: "Big Macs",
                     value: gbp / assumptions.burger,
-                    note: `Using ${formatMoney(assumptions.burger)} each.`
+                    note: `At £${assumptions.burger.toFixed(2)} each.`
                 },
                 {
-                    icon: "🥡",
+                    icon: "🍕",
                     label: "Takeaways",
                     value: gbp / assumptions.meal,
-                    note: `At ${formatMoney(assumptions.meal)} each.`
+                    note: `At £${assumptions.meal.toFixed(2)} each.`
                 },
                 {
                     icon: "💼",
@@ -721,32 +856,33 @@
                     icon: "🏠",
                     label: "Days of rent",
                     value: gbp / assumptions.rent,
-                    note: `Using ${formatMoney(assumptions.rent)} per day.`
+                    note: `At £${assumptions.rent.toFixed(2)} per day.`
                 },
                 {
                     icon: "🎮",
                     label: "Game consoles",
                     value: gbp / assumptions.console,
-                    note: `Using ${formatMoney(assumptions.console)} per console.`
+                    note: `At £${assumptions.console.toFixed(0)} each.`
                 }
             ];
         }
 
-        if (unit.category === "distance") {
-            const metres = baseValue;
+        if (category === "distance") {
+            const metres = toBase(value, unitKey);
+            const miles = metres / 1609.344;
 
             return [
                 {
                     icon: "👣",
                     label: "Steps",
                     value: metres / assumptions.step,
-                    note: `Using an average ${assumptions.step} m step.`
+                    note: `Using ${assumptions.step} m per step.`
                 },
                 {
-                    icon: "⚽",
+                    icon: "🏟",
                     label: "Football pitches",
                     value: metres / 105,
-                    note: "Using a 105 m pitch length."
+                    note: "Using a 105 m pitch."
                 },
                 {
                     icon: "🏃",
@@ -757,162 +893,163 @@
                 {
                     icon: "🌍",
                     label: "Trips around Earth",
-                    value: metres / 40075000,
-                    note: "Using roughly 40,075 km around Earth's equator."
+                    value: metres / 40075017,
+                    note: "Using Earth's approximate circumference."
                 },
                 {
                     icon: "🚶",
                     label: "Hours walking",
-                    value: metres / 5000,
-                    note: "Assuming roughly 5 km/h walking speed."
+                    value: miles / 3,
+                    note: "Using roughly 3 mph walking speed."
                 },
                 {
                     icon: "🚌",
                     label: "London bus lengths",
                     value: metres / 11,
-                    note: "Using roughly 11 m per bus."
+                    note: "Roughly 11 m per bus."
                 }
             ];
         }
 
-        if (unit.category === "weight") {
-            const grams = baseValue;
+        if (category === "weight") {
+            const kg = toBase(value, unitKey) / 1000;
 
             return [
                 {
-                    icon: "🧍",
+                    icon: "👤",
                     label: "Adults",
-                    value: grams / 80000,
-                    note: "Using an 80 kg reference."
+                    value: kg / 75,
+                    note: "Using 75 kg as a simple reference."
                 },
                 {
-                    icon: "🛍️",
+                    icon: "🍬",
                     label: "1 kg sugar bags",
-                    value: grams / 1000,
-                    note: "Each bag represents 1 kg."
+                    value: kg,
+                    note: "One bag = 1 kg."
                 },
                 {
                     icon: "💧",
                     label: "Litres of water",
-                    value: grams / 1000,
-                    note: "1 litre of water weighs roughly 1 kg."
+                    value: kg,
+                    note: "Approximately 1 kg per litre."
                 },
                 {
                     icon: "🐕",
                     label: "Large dogs",
-                    value: grams / 30000,
-                    note: "Using a 30 kg reference."
+                    value: kg / 30,
+                    note: "Using 30 kg as a rough reference."
                 },
                 {
                     icon: "🧱",
                     label: "Bricks",
-                    value: grams / 2500,
+                    value: kg / 2.5,
                     note: "Using roughly 2.5 kg per brick."
                 }
             ];
         }
 
-        if (unit.category === "data") {
-            const bytes = baseValue;
+        if (category === "data") {
+            const bytes = toBase(value, unitKey);
 
             return [
                 {
                     icon: "📷",
                     label: "Photos",
-                    value: bytes / 5000000,
-                    note: "Using roughly 5 MB per photo."
+                    value: bytes / 4e6,
+                    note: "Estimate: 4 MB per photo."
                 },
                 {
                     icon: "🎬",
                     label: "HD films",
-                    value: bytes / 5000000000,
-                    note: "Using roughly 5 GB per film."
+                    value: bytes / 5e9,
+                    note: "Estimate: 5 GB per film."
                 },
                 {
-                    icon: "🎵",
+                    icon: "♫",
                     label: "Songs",
-                    value: bytes / 10000000,
-                    note: "Using roughly 10 MB per song."
+                    value: bytes / 5e6,
+                    note: "Estimate: 5 MB per song."
                 },
                 {
                     icon: "🎧",
                     label: "Years of music",
-                    value: bytes / 315360000000,
-                    note: "Roughly 10 MB per 3½-minute song."
+                    value: bytes / 5e6 / 210 / 24 / 365,
+                    note: "Estimate using 5 MB songs averaging 3½ minutes."
                 },
                 {
                     icon: "💾",
                     label: "1 TB drives",
-                    value: bytes / 1000000000000,
-                    note: "Using decimal terabytes."
+                    value: bytes / 1e12,
+                    note: "Same data expressed as 1 TB drives."
                 }
             ];
         }
 
-        if (unit.category === "calories") {
-            const calories = baseValue;
+        if (category === "calories") {
+            const calories = toBase(value, unitKey);
 
             return [
                 {
-                    icon: "🍽️",
+                    icon: "📅",
                     label: "2,500-calorie days",
                     value: calories / 2500,
-                    note: "Using 2,500 kcal as a rough daily reference."
+                    note: "Simple energy comparison."
                 },
                 {
                     icon: "🍔",
                     label: "Big Macs",
-                    value: calories / 493,
-                    note: "Roughly 493 kcal each."
+                    value: calories / 550,
+                    note: "Approximate energy comparison."
                 },
                 {
                     icon: "🍫",
                     label: "Chocolate bars",
                     value: calories / 230,
-                    note: "Using roughly 230 kcal per bar."
+                    note: "Approximate energy comparison."
                 },
                 {
                     icon: "🍕",
                     label: "Pizzas",
                     value: calories / 1000,
-                    note: "Using roughly 1,000 kcal per pizza."
+                    note: "Approximate energy comparison."
                 }
             ];
         }
 
-        if (unit.category === "energy") {
-            const joules = baseValue;
+        if (category === "energy") {
+            const joules = toBase(value, unitKey);
+            const kwh = joules / 3600000;
 
             return [
                 {
                     icon: "📱",
                     label: "Phone charges",
-                    value: joules / 72000,
-                    note: "Using roughly 20 Wh per full charge."
+                    value: kwh * 1000 / 15,
+                    note: "Estimate: 15 Wh per charge."
                 },
                 {
-                    icon: "🫖",
+                    icon: "♨",
                     label: "Kettle boils",
-                    value: joules / 180000,
-                    note: "Using roughly 0.05 kWh per boil."
+                    value: kwh * 1000 / 100,
+                    note: "Estimate: 100 Wh per boil."
                 },
                 {
                     icon: "🚿",
                     label: "Showers",
-                    value: joules / 5000000,
-                    note: "A rough energy comparison."
+                    value: kwh / 2.5,
+                    note: "Estimate: 2.5 kWh per shower."
                 },
                 {
                     icon: "💡",
                     label: "LED bulb hours",
-                    value: joules / 360000,
-                    note: "Using a 100 W equivalent energy reference."
+                    value: kwh * 1000 / 10,
+                    note: "Estimate using a 10 W bulb."
                 },
                 {
                     icon: "🚗",
                     label: "Electric car miles",
-                    value: joules / 900000,
-                    note: "Using a rough 0.25 kWh per mile."
+                    value: kwh / 0.3,
+                    note: "Estimate using 300 Wh per mile."
                 }
             ];
         }
@@ -925,6 +1062,7 @@
 
         comparisons.forEach((comparison) => {
             const card = document.createElement("article");
+
             card.className = "comparison-card";
 
             card.innerHTML = `
@@ -949,503 +1087,575 @@
         });
     }
 
-    function generateWeirdComparison(value, unitKey) {
-        const unit = units[unitKey];
+    /* ---------- Weird comparisons ---------- */
 
-        if (!unit) {
-            return {
-                title: "That's a lot.",
-                description: "Try another number."
+    const weirdComparisons = [
+        {
+            label: "coffees",
+            get: (gbp) => gbp / assumptions.coffee,
+            description: () =>
+                `That's roughly ${formatNumber(
+                    currentValue / assumptions.coffee
+                )} coffees if each one costs £${assumptions.coffee.toFixed(2)}.`
+        },
+        {
+            label: "Big Macs",
+            get: (gbp) => gbp / assumptions.burger,
+            description: () =>
+                `Enough money for roughly ${formatNumber(
+                    currentValue / assumptions.burger
+                )} Big Macs at £${assumptions.burger.toFixed(2)} each.`
+        },
+        {
+            label: "football pitches",
+            get: (metres) => metres / 105,
+            description: () =>
+                `That's roughly ${formatNumber(
+                    toBase(currentValue, currentUnit) / 105
+                )} football pitches laid end-to-end.`
+        },
+        {
+            label: "steps",
+            get: (metres) => metres / assumptions.step,
+            description: () =>
+                `You'd be looking at roughly ${formatNumber(
+                    toBase(currentValue, currentUnit) / assumptions.step
+                )} steps.`
+        }
+    ];
+
+    let currentValue = 10000;
+    let currentUnit = "hours";
+
+    function showWeirdComparison() {
+        const category = units[currentUnit].category;
+
+        let result;
+
+        if (category === "money") {
+            const options = [
+                {
+                    title: "That's a lot of coffee.",
+                    description: `You could buy about ${formatNumber(
+                        toBase(currentValue, currentUnit) / assumptions.coffee
+                    )} coffees.`
+                },
+                {
+                    title: "That's a suspicious amount of Big Macs.",
+                    description: `At £${assumptions.burger.toFixed(
+                        2
+                    )} each, that's about ${formatNumber(
+                        toBase(currentValue, currentUnit) / assumptions.burger
+                    )} Big Macs.`
+                },
+                {
+                    title: "That's a lot of working hours.",
+                    description: `At £${assumptions.wage.toFixed(
+                        2
+                    )}/hour, that's about ${formatNumber(
+                        toBase(currentValue, currentUnit) / assumptions.wage
+                    )} hours of work.`
+                }
+            ];
+
+            result = randomItem(options);
+        } else if (category === "time") {
+            const seconds = toBase(currentValue, currentUnit);
+
+            const options = [
+                {
+                    title: "That's a lot of songs.",
+                    description: `Roughly ${formatNumber(
+                        seconds / 210
+                    )} average-length songs.`
+                },
+                {
+                    title: "That's a worrying number of films.",
+                    description: `About ${formatNumber(
+                        seconds / 7200
+                    )} two-hour films.`
+                },
+                {
+                    title: "That's a lot of sleep.",
+                    description: `Equivalent to about ${formatNumber(
+                        seconds / 28800
+                    )} eight-hour nights.`
+                }
+            ];
+
+            result = randomItem(options);
+        } else if (category === "distance") {
+            const metres = toBase(currentValue, currentUnit);
+
+            const options = [
+                {
+                    title: "That's a lot of walking.",
+                    description: `About ${formatNumber(
+                        metres / assumptions.step
+                    )} steps.`
+                },
+                {
+                    title: "That's a ridiculous number of football pitches.",
+                    description: `Roughly ${formatNumber(
+                        metres / 105
+                    )} pitches end-to-end.`
+                },
+                {
+                    title: "That's marathon territory.",
+                    description: `About ${formatNumber(
+                        metres / 42195
+                    )} marathons.`
+                }
+            ];
+
+            result = randomItem(options);
+        } else if (category === "data") {
+            const bytes = toBase(currentValue, currentUnit);
+
+            const options = [
+                {
+                    title: "That's a lot of photos.",
+                    description: `Roughly ${formatNumber(
+                        bytes / 4e6
+                    )} photos at 4 MB each.`
+                },
+                {
+                    title: "That's an unreasonable music library.",
+                    description: `Roughly ${formatNumber(
+                        bytes / 5e6
+                    )} songs at 5 MB each.`
+                },
+                {
+                    title: "That's a serious film collection.",
+                    description: `Around ${formatNumber(
+                        bytes / 5e9
+                    )} HD films at 5 GB each.`
+                }
+            ];
+
+            result = randomItem(options);
+        } else {
+            result = {
+                title: "Okay... that's getting ridiculous.",
+                description: "Try another category for a stranger comparison."
             };
         }
 
-        const baseValue = convertToBase(value, unitKey);
-
-        if (unit.category === "time") {
-            const days = baseValue / 86400;
-
-            if (days >= 365) {
-                return {
-                    title: "You've been alive for a while.",
-                    description: `That's roughly ${formatNumber(days / 365)} years of time.`
-                };
-            }
-
-            if (days >= 30) {
-                return {
-                    title: "That's basically a whole era.",
-                    description: `You're looking at around ${formatNumber(days / 30)} months.`
-                };
-            }
-
-            return {
-                title: "That's a suspicious amount of time.",
-                description: `Enough time for roughly ${formatNumber(baseValue / 210)} songs.`
-            };
-        }
-
-        if (unit.category === "money") {
-            const gbp = baseValue;
-
-            if (gbp >= 1000000) {
-                return {
-                    title: "That's proper money.",
-                    description: `You could buy roughly ${formatNumber(gbp / assumptions.console)} game consoles.`
-                };
-            }
-
-            if (gbp >= 100000) {
-                return {
-                    title: "That's a lot of weekends.",
-                    description: `At £${assumptions.rent} per day, that's around ${formatNumber(gbp / assumptions.rent)} days of rent.`
-                };
-            }
-
-            return {
-                title: "That's a dangerous amount of takeaway money.",
-                description: `At ${formatMoney(assumptions.meal)} each, that's around ${formatNumber(gbp / assumptions.meal)} takeaways.`
-            };
-        }
-
-        if (unit.category === "distance") {
-            const miles = baseValue / 1609.344;
-
-            return {
-                title: "You could've gone somewhere.",
-                description: `That's roughly ${formatNumber(miles)} miles — about ${formatNumber(miles / 26.2188)} marathons.`
-            };
-        }
-
-        if (unit.category === "weight") {
-            const kg = baseValue / 1000;
-
-            return {
-                title: "That's getting heavy.",
-                description: `That's about ${formatNumber(kg / 2.5)} standard bricks.`
-            };
-        }
-
-        if (unit.category === "data") {
-            const gb = baseValue / 1000000000;
-
-            return {
-                title: "That's a lot of storage.",
-                description: `That's roughly ${formatNumber(gb / 5)} HD films at around 5 GB each.`
-            };
-        }
-
-        if (unit.category === "calories") {
-            return {
-                title: "That's a serious amount of food energy.",
-                description: `That's roughly ${formatNumber(baseValue / 2500)} days worth of 2,500-calorie food budgets.`
-            };
-        }
-
-        if (unit.category === "energy") {
-            return {
-                title: "That's some serious energy.",
-                description: `That's roughly ${formatNumber(baseValue / 72000)} full smartphone charges.`
-            };
-        }
-
-        return {
-            title: "That's a lot.",
-            description: "Now you have a better idea of what it means."
-        };
+        $("#weirdTitle").textContent = result.title;
+        $("#weirdDescription").textContent = result.description;
+        $("#weirdResult").hidden = false;
+        $("#weirdResult").scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
     }
 
-    function renderWeirdComparison(value, unitKey) {
-        const weird = generateWeirdComparison(value, unitKey);
-
-        $("#weirdTitle").textContent = weird.title;
-        $("#weirdDescription").textContent = weird.description;
+    function randomItem(array) {
+        return array[Math.floor(Math.random() * array.length)];
     }
+
+    /* ---------- Main conversion ---------- */
 
     function convert() {
         const value = Number(mainInput.value);
         const unitKey = unitSelect.value;
-        const unit = units[unitKey];
 
-        if (!Number.isFinite(value) || value < 0 || !unit) {
+        if (!Number.isFinite(value) || value < 0) {
             showToast("Enter a valid number.");
             mainInput.focus();
             return;
         }
 
+        currentValue = value;
+        currentUnit = unitKey;
+
+        const unit = units[unitKey];
+
         resultsTitle.textContent =
             `${formatNumber(value)} ${unit.label.toLowerCase()}`;
 
-        renderJourney(value, unitKey);
+        const journey = buildJourney(value, unitKey);
 
-        const comparisons = createComparisons(value, unitKey);
+        renderJourney(journey);
+
+        const comparisons = generateComparisons(value, unitKey);
 
         renderComparisons(comparisons);
-        renderWeirdComparison(value, unitKey);
 
         resultsSection.hidden = false;
+
+        updateURL();
 
         resultsSection.scrollIntoView({
             behavior: "smooth",
             block: "start"
         });
-
-        updateURL(value, unitKey);
     }
 
-    function updateURL(value, unitKey) {
-        try {
-            const url = new URL(window.location.href);
+    /* ---------- Copy ---------- */
 
-            url.searchParams.set("value", value);
-            url.searchParams.set("unit", unitKey);
+    function buildCopyText() {
+        const unit = units[currentUnit];
 
-            window.history.replaceState({}, "", url);
-        } catch (error) {
-            // Ignore URL errors.
-        }
-    }
+        const journey = buildJourney(currentValue, currentUnit);
 
-    function loadFromURL() {
-        try {
-            const params = new URLSearchParams(window.location.search);
+        let text =
+            `${formatNumber(currentValue)} ${unit.label.toLowerCase()}`;
 
-            const value = params.get("value");
-            const unit = params.get("unit");
+        journey.slice(1, 4).forEach((step) => {
+            text += ` → ${formatNumber(step.value)} ${step.unit}`;
+        });
 
-            if (value !== null && units[unit]) {
-                mainInput.value = value;
-                unitSelect.value = unit;
-                updateInputSymbol();
-
-                convert();
-            }
-        } catch (error) {
-            // Ignore URL loading errors.
-        }
-    }
-
-    function showToast(message) {
-        if (!toast) return;
-
-        toast.textContent = message;
-        toast.hidden = false;
-
-        clearTimeout(showToast.timeout);
-
-        showToast.timeout = setTimeout(() => {
-            toast.hidden = true;
-        }, 2400);
+        return `Everything Converter\n${text}`;
     }
 
     async function copyResult() {
-        const title = resultsTitle.textContent;
-        const weirdTitle = $("#weirdTitle")?.textContent || "";
-        const weirdDescription = $("#weirdDescription")?.textContent || "";
-
-        const text = [
-            "Everything Converter",
-            "",
-            title,
-            "",
-            weirdTitle,
-            weirdDescription
-        ].join("\n");
+        const text = buildCopyText();
 
         try {
             await navigator.clipboard.writeText(text);
             showToast("Result copied.");
-        } catch (error) {
-            showToast("Couldn't copy automatically.");
+        } catch {
+            fallbackCopy(text);
         }
     }
 
-    async function shareResult() {
-        const title = resultsTitle.textContent;
-        const weirdTitle = $("#weirdTitle")?.textContent || "";
-        const weirdDescription = $("#weirdDescription")?.textContent || "";
+    function fallbackCopy(text) {
+        const textarea = document.createElement("textarea");
 
-        const shareData = {
-            title: "Everything Converter",
-            text: `${title}\n\n${weirdTitle}\n${weirdDescription}`,
-            url: window.location.href
-        };
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+
+        document.body.appendChild(textarea);
+
+        textarea.select();
+
+        try {
+            document.execCommand("copy");
+            showToast("Result copied.");
+        } catch {
+            showToast("Couldn't copy automatically.");
+        }
+
+        textarea.remove();
+    }
+
+    /* ---------- Share ---------- */
+
+    async function shareResult() {
+        const text = buildCopyText();
 
         if (navigator.share) {
             try {
-                await navigator.share(shareData);
-            } catch (error) {
-                // User cancelled sharing.
+                await navigator.share({
+                    title: "Everything Converter",
+                    text,
+                    url: window.location.href
+                });
+
+                return;
+            } catch {
+                return;
             }
-        } else {
-            await copyResult();
         }
+
+        await copyResult();
     }
 
-    function applyAssumptions() {
-        const fields = {
-            wage: $("#assumeWage"),
-            coffee: $("#assumeCoffee"),
-            meal: $("#assumeMeal"),
-            subscription: $("#assumeSubscription"),
-            rent: $("#assumeRent"),
-            console: $("#assumeConsole"),
-            burger: $("#assumeBurger"),
-            step: $("#assumeStep")
-        };
+    /* ---------- URL ---------- */
 
-        Object.entries(fields).forEach(([key, input]) => {
-            if (!input) return;
+    function updateURL() {
+        const params = new URLSearchParams();
 
-            const value = Number(input.value);
+        params.set("value", currentValue);
+        params.set("unit", currentUnit);
 
-            if (Number.isFinite(value) && value > 0) {
-                assumptions[key] = value;
-            }
-        });
+        history.replaceState(
+            null,
+            "",
+            `${window.location.pathname}?${params.toString()}`
+        );
+    }
 
-        showToast("Assumptions updated.");
+    function loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
 
-        if (!resultsSection.hidden) {
+        const value = Number(params.get("value"));
+        const unit = params.get("unit");
+
+        if (
+            Number.isFinite(value) &&
+            value >= 0 &&
+            unit &&
+            units[unit]
+        ) {
+            mainInput.value = value;
+            unitSelect.value = unit;
+
+            currentValue = value;
+            currentUnit = unit;
+
+            updateInputSymbol();
+
             convert();
         }
     }
 
+    /* ---------- Surprise Me ---------- */
+
+    const surprisePresets = [
+        ["1000000", "seconds"],
+        ["100000", "gbp"],
+        ["1000", "miles"],
+        ["10", "tb"],
+        ["10000", "hours"],
+        ["1000000000", "seconds"],
+        ["500", "kg"],
+        ["1000000", "calories"],
+        ["100", "gbp"],
+        ["50000", "metres"]
+    ];
+
+    function surpriseMe() {
+        const preset = randomItem(surprisePresets);
+
+        mainInput.value = preset[0];
+        unitSelect.value = preset[1];
+
+        updateInputSymbol();
+        convert();
+    }
+
+    /* ---------- Examples ---------- */
+
     function setupExamples() {
-        $$(".example-chip").forEach((chip) => {
-            chip.addEventListener("click", () => {
-                const value = chip.dataset.value;
-                const unit = chip.dataset.unit;
+        $$(".example-chip").forEach((button) => {
+            button.addEventListener("click", () => {
+                mainInput.value = button.dataset.value;
+                unitSelect.value = button.dataset.unit;
 
-                if (value) {
-                    mainInput.value = value;
-                }
-
-                if (unit && units[unit]) {
-                    unitSelect.value = unit;
-                    updateInputSymbol();
-                }
-
+                updateInputSymbol();
                 convert();
             });
         });
     }
+
+    /* ---------- Explore ---------- */
 
     function setupExplore() {
         $$(".explore-card").forEach((card) => {
             card.addEventListener("click", () => {
-                const value = card.dataset.value;
-                const unit = card.dataset.unit;
+                mainInput.value = card.dataset.value;
+                unitSelect.value = card.dataset.unit;
 
-                if (value) {
-                    mainInput.value = value;
-                }
-
-                if (unit && units[unit]) {
-                    unitSelect.value = unit;
-                    updateInputSymbol();
-                }
-
+                updateInputSymbol();
                 convert();
             });
         });
     }
 
-    function setupSurpriseMe() {
-        const surpriseButton = $("#surpriseButton");
-
-        if (!surpriseButton) return;
-
-        const surprises = [
-            { value: 1000000, unit: "seconds" },
-            { value: 100000, unit: "gbp" },
-            { value: 1000, unit: "miles" },
-            { value: 10, unit: "tb" },
-            { value: 10000, unit: "hours" },
-            { value: 1000000000, unit: "seconds" },
-            { value: 100, unit: "kg" },
-            { value: 500000, unit: "calories" }
-        ];
-
-        surpriseButton.addEventListener("click", () => {
-            const random =
-                surprises[Math.floor(Math.random() * surprises.length)];
-
-            mainInput.value = random.value;
-            unitSelect.value = random.unit;
-
-            updateInputSymbol();
-            convert();
-        });
-    }
+    /* ---------- Theme ---------- */
 
     function setupTheme() {
-        const themeButton = $("#themeButton");
-        const themeIcon = $("#themeIcon");
+        const button = $("#themeToggle");
+        const icon = $("#themeIcon");
 
-        if (!themeButton) return;
+        if (!button) return;
 
-        const savedTheme = localStorage.getItem("everything-converter-theme");
+        const saved = localStorage.getItem("everything-theme");
 
-        if (savedTheme === "dark") {
+        if (saved === "dark") {
             document.documentElement.dataset.theme = "dark";
-
-            if (themeIcon) {
-                themeIcon.textContent = "☀";
-            }
         }
 
-        themeButton.addEventListener("click", () => {
+        updateThemeIcon();
+
+        button.addEventListener("click", () => {
             const isDark =
                 document.documentElement.dataset.theme === "dark";
 
             if (isDark) {
                 delete document.documentElement.dataset.theme;
-                localStorage.setItem(
-                    "everything-converter-theme",
-                    "light"
-                );
-
-                if (themeIcon) {
-                    themeIcon.textContent = "☾";
-                }
+                localStorage.setItem("everything-theme", "light");
             } else {
                 document.documentElement.dataset.theme = "dark";
-                localStorage.setItem(
-                    "everything-converter-theme",
-                    "dark"
-                );
-
-                if (themeIcon) {
-                    themeIcon.textContent = "☀";
-                }
+                localStorage.setItem("everything-theme", "dark");
             }
-        });
-    }
 
-    function setupNavigation() {
-        $$(".nav-links a").forEach((link) => {
-            link.addEventListener("click", () => {
-                const target = link.getAttribute("href");
-
-                if (!target || !target.startsWith("#")) {
-                    return;
-                }
-
-                const element = $(target);
-
-                if (element) {
-                    element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                }
-            });
+            updateThemeIcon();
         });
 
-        const brand = $(".brand");
+        function updateThemeIcon() {
+            const isDark =
+                document.documentElement.dataset.theme === "dark";
 
-        if (brand) {
-            brand.addEventListener("click", (event) => {
-                event.preventDefault();
+            icon.textContent = isDark ? "☀" : "☾";
 
-                window.location.href = "./";
-            });
+            button.setAttribute(
+                "aria-label",
+                isDark
+                    ? "Switch to light theme"
+                    : "Switch to dark theme"
+            );
         }
     }
+
+    /* ---------- Assumptions ---------- */
 
     function setupAssumptions() {
-        const collapseButton = $(".collapse-button");
-        const assumptionPanel = $(".side-panel");
+        const toggle = $("#assumptionsToggle");
+        const content = $("#assumptionsContent");
+        const apply = $("#applyAssumptions");
 
-        if (!collapseButton || !assumptionPanel) {
-            return;
+        if (toggle && content) {
+            toggle.addEventListener("click", () => {
+                const open =
+                    toggle.getAttribute("aria-expanded") === "true";
+
+                toggle.setAttribute(
+                    "aria-expanded",
+                    String(!open)
+                );
+
+                content.hidden = open;
+                toggle.textContent = open ? "+" : "−";
+            });
         }
 
-        collapseButton.addEventListener("click", () => {
-            const collapsed =
-                assumptionPanel.classList.toggle("collapsed");
+        if (apply) {
+            apply.addEventListener("click", () => {
+                const wage = Number($("#assumeWage").value);
+                const coffee = Number($("#assumeCoffee").value);
+                const meal = Number($("#assumeMeal").value);
+                const subscription = Number(
+                    $("#assumeSubscription").value
+                );
+                const rent = Number($("#assumeRent").value);
+                const consolePrice = Number(
+                    $("#assumeConsole").value
+                );
+                const burger = Number($("#assumeBurger").value);
+                const step = Number($("#assumeStep").value);
 
-            collapseButton.setAttribute(
-                "aria-expanded",
-                String(!collapsed)
-            );
-        });
+                if (wage > 0) assumptions.wage = wage;
+                if (coffee > 0) assumptions.coffee = coffee;
+                if (meal > 0) assumptions.meal = meal;
+                if (subscription > 0) {
+                    assumptions.subscription = subscription;
+                }
+                if (rent > 0) assumptions.rent = rent;
+                if (consolePrice > 0) {
+                    assumptions.console = consolePrice;
+                }
+                if (burger > 0) assumptions.burger = burger;
+                if (step > 0) assumptions.step = step;
 
-        const applyButton = $(".apply-button");
+                showToast("Assumptions applied.");
 
-        if (applyButton) {
-            applyButton.addEventListener("click", applyAssumptions);
-        }
-    }
-
-    function setupButtons() {
-        const copyButton = $("#copyResult");
-        const shareButton = $("#shareResult");
-        const anotherWeird = $("#anotherWeird");
-
-        if (copyButton) {
-            copyButton.addEventListener("click", copyResult);
-        }
-
-        if (shareButton) {
-            shareButton.addEventListener("click", shareResult);
-        }
-
-        if (anotherWeird) {
-            anotherWeird.addEventListener("click", () => {
-                const value = Number(mainInput.value);
-                const unit = unitSelect.value;
-
-                if (Number.isFinite(value) && units[unit]) {
-                    renderWeirdComparison(value, unit);
+                if (!resultsSection.hidden) {
+                    convert();
                 }
             });
         }
     }
 
-    function setupKeyboard() {
-        if (!mainInput) return;
+    /* ---------- Toast ---------- */
 
+    let toastTimer;
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2200);
+    }
+
+    /* ---------- Keyboard ---------- */
+
+    function setupKeyboard() {
         mainInput.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 event.preventDefault();
                 convert();
             }
         });
+    }
 
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-                if (resultsSection) {
-                    resultsSection.hidden = true;
+    /* ---------- Navigation ---------- */
+
+    function setupNavigation() {
+        $$(".nav-links a").forEach((link) => {
+            link.addEventListener("click", () => {
+                const target = document.querySelector(
+                    link.getAttribute("href")
+                );
+
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: "smooth"
+                    });
                 }
-            }
+            });
         });
     }
 
-    function setupForm() {
-        if (!converterForm) return;
+    /* ---------- Escape HTML ---------- */
 
-        converterForm.addEventListener("submit", (event) => {
-            event.preventDefault();
-            convert();
-        });
-
-        unitSelect.addEventListener("change", updateInputSymbol);
+    function escapeHTML(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
-    function init() {
-        populateUnits();
-        setupForm();
-        setupExamples();
-        setupExplore();
-        setupSurpriseMe();
-        setupTheme();
-        setupNavigation();
-        setupAssumptions();
-        setupButtons();
-        setupKeyboard();
-        loadFromURL();
-    }
+    /* ---------- Events ---------- */
 
-    init();
+    converterForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        convert();
+    });
+
+    unitSelect.addEventListener("change", updateInputSymbol);
+
+    $("#copyResult").addEventListener("click", copyResult);
+
+    $("#shareResult").addEventListener("click", shareResult);
+
+    $("#weirdButton").addEventListener(
+        "click",
+        showWeirdComparison
+    );
+
+    $("#anotherWeird").addEventListener(
+        "click",
+        showWeirdComparison
+    );
+
+    $("#surpriseButton").addEventListener(
+        "click",
+        surpriseMe
+    );
+
+    /* ---------- Start ---------- */
+
+    populateUnits("hours");
+    setupExamples();
+    setupExplore();
+    setupTheme();
+    setupAssumptions();
+    setupKeyboard();
+    setupNavigation();
+
+    loadFromURL();
+
+    if (!window.location.search) {
+        updateInputSymbol();
+    }
 })();

@@ -3,347 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Everything Converter — turn numbers into things you can actually understand.">
+
+    <meta
+        name="description"
+        content="Everything Converter — turn ordinary numbers into things you can actually understand."
+    >
+
     <meta name="theme-color" content="#111111">
+
     <title>Everything Converter</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+    <header class="site-header">
+        <div class="nav-wrap">
+            <a href="#" class="brand" aria-label="Everything Converter home">
+                <span class="brand-mark">EC</span>
+                <span>Everything Converter</span>
+            </a>
 
-<header class="site-header">
-    <a href="#" class="brand" aria-label="Everything Converter home">
-        EVERYTHING CONVERTER
-    </a>
+            <nav class="nav-links" aria-label="Main navigation">
+                <a href="#convert">Convert</a>
+                <a href="#explore">Explore</a>
+                <a href="#about">About</a>
+            </nav>
 
-    <nav aria-label="Main navigation">
-        <a href="#converter">Convert</a>
-        <a href="#explore">Explore</a>
-        <a href="#about">About</a>
-    </nav>
-
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle colour theme">
-        <span id="themeIcon">☾</span>
-    </button>
-</header>
-
-<main>
-
-    <section class="hero">
-        <div class="eyebrow">A DIFFERENT KIND OF CONVERTER</div>
-
-        <h1>
-            Everything means<br>
-            <em>something</em> when you convert it.
-        </h1>
-
-        <p>
-            Turn numbers into things you can actually understand.
-        </p>
-    </section>
-
-    <section class="converter-section" id="converter">
-
-        <div class="converter-box">
-
-            <div class="converter-heading">
-                <div>
-                    <span class="section-label">CONVERTER</span>
-                    <h2>What do you want to convert?</h2>
-                </div>
-
-                <button class="surprise-button" id="surpriseButton" type="button">
-                    <span>↯</span> Surprise me
-                </button>
-            </div>
-
-            <form id="converterForm">
-
-                <div class="input-row">
-
-                    <div class="input-wrapper">
-                        <label for="valueInput">Amount</label>
-                        <input
-                            id="valueInput"
-                            type="number"
-                            inputmode="decimal"
-                            step="any"
-                            min="0"
-                            value="10000"
-                            autocomplete="off"
-                        >
-                    </div>
-
-                    <div class="select-wrapper">
-                        <label for="unitSelect">Unit</label>
-                        <select id="unitSelect">
-                            <option value="seconds">Seconds</option>
-                            <option value="minutes">Minutes</option>
-                            <option value="hours" selected>Hours</option>
-                            <option value="days">Days</option>
-                            <option value="weeks">Weeks</option>
-                            <option value="months">Months</option>
-                            <option value="years">Years</option>
-                            <option value="decades">Decades</option>
-                            <option value="centuries">Centuries</option>
-                            <option value="gbp">£ GBP</option>
-                            <option value="usd">$ USD</option>
-                            <option value="eur">€ EUR</option>
-                            <option value="miles">Miles</option>
-                            <option value="kilometres">Kilometres</option>
-                            <option value="kg">Kilograms</option>
-                            <option value="lb">Pounds</option>
-                            <option value="calories">Calories</option>
-                            <option value="gb">Gigabytes</option>
-                            <option value="tb">Terabytes</option>
-                            <option value="kwh">Kilowatt-hours</option>
-                            <option value="joules">Joules</option>
-                        </select>
-                    </div>
-
-                    <button class="convert-button" type="submit">
-                        Convert <span>→</span>
-                    </button>
-
-                </div>
-
-            </form>
-
-            <div class="examples">
-                <span>Try:</span>
-                <button type="button" class="example-chip" data-value="10000" data-unit="hours">10,000 hours</button>
-                <button type="button" class="example-chip" data-value="1000" data-unit="gbp">£1,000</button>
-                <button type="button" class="example-chip" data-value="500" data-unit="miles">500 miles</button>
-                <button type="button" class="example-chip" data-value="1" data-unit="tb">1 TB</button>
-                <button type="button" class="example-chip" data-value="10000" data-unit="calories">10,000 calories</button>
-            </div>
-
-        </div>
-
-        <div id="assumptions" class="assumptions">
-
-            <button class="assumptions-toggle" id="assumptionsToggle" type="button">
-                <span>
-                    <strong>Assumptions</strong>
-                    <small>Change the prices used for real-world comparisons</small>
-                </span>
-                <span id="assumptionArrow">+</span>
+            <button
+                class="theme-button"
+                id="themeToggle"
+                type="button"
+                aria-label="Toggle colour theme"
+                title="Toggle theme"
+            >
+                <span id="themeIcon">☾</span>
             </button>
+        </div>
+    </header>
 
-            <div class="assumptions-content" id="assumptionsContent">
+    <main>
+        <section class="hero" id="convert">
+            <div class="hero-inner">
+                <p class="eyebrow">A converter for normal things</p>
 
-                <div class="assumption-grid">
+                <h1>
+                    Everything means something<br>
+                    when you convert it.
+                </h1>
 
-                    <label>
-                        Hourly wage
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="wageInput" type="number" min="0.01" step="0.01" value="13.00">
-                        </div>
-                    </label>
-
-                    <label>
-                        Coffee
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="coffeeInput" type="number" min="0.01" step="0.01" value="4.00">
-                        </div>
-                    </label>
-
-                    <label>
-                        Takeaway meal
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="mealInput" type="number" min="0.01" step="0.01" value="12.00">
-                        </div>
-                    </label>
-
-                    <label>
-                        Monthly subscription
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="subscriptionInput" type="number" min="0.01" step="0.01" value="12.99">
-                        </div>
-                    </label>
-
-                    <label>
-                        Daily rent
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="rentInput" type="number" min="0.01" step="0.01" value="30">
-                        </div>
-                    </label>
-
-                    <label>
-                        Game console
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="consoleInput" type="number" min="0.01" step="1" value="500">
-                        </div>
-                    </label>
-
-                    <label>
-                        Big Mac
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="burgerInput" type="number" min="0.01" step="0.01" value="5.49">
-                        </div>
-                    </label>
-
-                    <label>
-                        Cinema ticket
-                        <div class="assumption-input">
-                            <span>£</span>
-                            <input id="cinemaInput" type="number" min="0.01" step="0.01" value="12">
-                        </div>
-                    </label>
-
-                </div>
-
-                <p class="assumption-note">
-                    These are editable estimates, not live prices. Your changes are saved in this browser.
+                <p class="hero-description">
+                    Turn numbers into things you can actually understand.
+                    Money, time, distance, data and the occasional ridiculous comparison.
                 </p>
 
-            </div>
+                <div class="converter-shell">
+                    <form id="converterForm" class="converter-form">
+                        <label for="mainInput">What do you want to convert?</label>
 
-        </div>
+                        <div class="input-row">
+                            <div class="input-wrap">
+                                <span class="input-symbol" id="inputSymbol"></span>
 
-    </section>
+                                <input
+                                    id="mainInput"
+                                    name="value"
+                                    type="number"
+                                    inputmode="decimal"
+                                    min="0"
+                                    step="any"
+                                    value="10000"
+                                    autocomplete="off"
+                                    aria-describedby="inputHelp"
+                                >
+                            </div>
 
-    <section class="results-section hidden" id="resultsSection">
+                            <select id="unitSelect" aria-label="Choose unit"></select>
 
-        <div class="results-header">
-            <div>
-                <span class="section-label">YOUR CONVERSION</span>
-                <h2 id="resultsTitle">10,000 hours</h2>
-            </div>
+                            <button class="convert-button" type="submit">
+                                Convert
+                                <span>→</span>
+                            </button>
+                        </div>
 
-            <div class="result-actions">
-                <button type="button" id="copyButton" class="secondary-button">
-                    Copy result
-                </button>
-                <button type="button" id="shareButton" class="secondary-button">
-                    Share
-                </button>
-            </div>
-        </div>
+                        <p class="input-help" id="inputHelp">
+                            Pick something. We'll make it make sense.
+                        </p>
+                    </form>
 
-        <div id="conversionJourney" class="conversion-journey"></div>
+                    <div class="example-row" aria-label="Examples">
+                        <span>Try:</span>
 
-        <section class="chaos-section">
-            <div class="chaos-heading">
-                <div>
-                    <span class="section-label">THE FUN PART</span>
-                    <h2>Okay... but what does that actually mean?</h2>
+                        <button type="button" class="example-chip" data-value="10000" data-unit="hours">
+                            10,000 hours
+                        </button>
+
+                        <button type="button" class="example-chip" data-value="1000" data-unit="gbp">
+                            £1,000
+                        </button>
+
+                        <button type="button" class="example-chip" data-value="500" data-unit="miles">
+                            500 miles
+                        </button>
+
+                        <button type="button" class="example-chip" data-value="1" data-unit="tb">
+                            1 TB
+                        </button>
+
+                        <button type="button" class="example-chip" data-value="10000" data-unit="calories">
+                            10,000 calories
+                        </button>
+                    </div>
                 </div>
-
-                <button id="weirdButton" type="button" class="weird-button">
-                    Give me a weird comparison ↯
-                </button>
             </div>
-
-            <div id="chaosGrid" class="chaos-grid"></div>
         </section>
 
-        <div id="weirdResult" class="weird-result hidden"></div>
+        <section class="results-section" id="results" hidden>
+            <div class="content-width">
+                <div class="results-header">
+                    <div>
+                        <p class="eyebrow">Your conversion</p>
+                        <h2 id="resultsTitle">10,000 hours</h2>
+                    </div>
 
-    </section>
+                    <div class="result-actions">
+                        <button class="secondary-button" id="copyResult" type="button">
+                            Copy result
+                        </button>
 
-    <section class="explore-section" id="explore">
+                        <button class="secondary-button" id="shareResult" type="button">
+                            Share
+                        </button>
 
-        <div class="section-intro">
-            <span class="section-label">EXPLORE</span>
-            <h2>Things worth converting.</h2>
-            <p>
-                Some numbers are much more interesting once you put them into perspective.
-            </p>
-        </div>
+                        <button class="secondary-button" id="weirdButton" type="button">
+                            Give me a weird comparison
+                        </button>
+                    </div>
+                </div>
 
-        <div class="explore-grid">
+                <div class="conversion-layout">
+                    <div class="conversion-journey" id="conversionJourney"></div>
 
-            <button class="explore-card" data-value="1000000" data-unit="seconds">
-                <span class="card-number">01</span>
-                <strong>How long is 1 million seconds?</strong>
-                <span>Time gets weird quickly →</span>
-            </button>
+                    <aside class="side-panel">
+                        <div class="panel-card">
+                            <div class="panel-heading">
+                                <div>
+                                    <p class="eyebrow">Assumptions</p>
+                                    <h3>Make it yours</h3>
+                                </div>
 
-            <button class="explore-card" data-value="100000" data-unit="gbp">
-                <span class="card-number">02</span>
-                <strong>What is £100,000 in coffees?</strong>
-                <span>Probably too many →</span>
-            </button>
+                                <button
+                                    class="collapse-button"
+                                    id="assumptionsToggle"
+                                    type="button"
+                                    aria-expanded="true"
+                                >
+                                    −
+                                </button>
+                            </div>
 
-            <button class="explore-card" data-value="1000" data-unit="miles">
-                <span class="card-number">03</span>
-                <strong>How far is 1,000 miles?</strong>
-                <span>Put it on the map →</span>
-            </button>
+                            <div id="assumptionsContent" class="assumptions-content">
+                                <p class="panel-description">
+                                    Real-world comparisons are estimates. Change the assumptions
+                                    to match your world.
+                                </p>
 
-            <button class="explore-card" data-value="10" data-unit="years">
-                <span class="card-number">04</span>
-                <strong>What is 10 years of music?</strong>
-                <span>How much listening is that? →</span>
-            </button>
+                                <div class="assumption-grid">
+                                    <label>
+                                        <span>Hourly wage</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeWage" type="number" min="0" step="0.01" value="13.45">
+                                        </div>
+                                    </label>
 
-            <button class="explore-card" data-value="10000" data-unit="hours">
-                <span class="card-number">05</span>
-                <strong>How many working days are 10,000 hours?</strong>
-                <span>Put work into perspective →</span>
-            </button>
+                                    <label>
+                                        <span>Coffee price</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeCoffee" type="number" min="0.01" step="0.01" value="4">
+                                        </div>
+                                    </label>
 
-            <button class="explore-card" data-value="1000000000" data-unit="seconds">
-                <span class="card-number">06</span>
-                <strong>What does 1 billion seconds look like?</strong>
-                <span>This one is ridiculous →</span>
-            </button>
+                                    <label>
+                                        <span>Takeaway meal</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeMeal" type="number" min="0.01" step="0.01" value="11">
+                                        </div>
+                                    </label>
 
-        </div>
+                                    <label>
+                                        <span>Subscription / month</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeSubscription" type="number" min="0.01" step="0.01" value="12">
+                                        </div>
+                                    </label>
 
-    </section>
+                                    <label>
+                                        <span>Daily rent</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeRent" type="number" min="0.01" step="0.01" value="30">
+                                        </div>
+                                    </label>
 
-    <section class="about-section" id="about">
+                                    <label>
+                                        <span>Console price</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeConsole" type="number" min="1" step="1" value="499">
+                                        </div>
+                                    </label>
 
-        <div class="about-content">
-            <span class="section-label">ABOUT</span>
-            <h2>Numbers are boring.<br><em>Context isn't.</em></h2>
+                                    <label>
+                                        <span>Big Mac price</span>
+                                        <div class="assumption-input">
+                                            <span>£</span>
+                                            <input id="assumeBurger" type="number" min="0.01" step="0.01" value="5">
+                                        </div>
+                                    </label>
 
-            <p>
-                Everything Converter takes ordinary numbers and turns them into
-                comparisons that are easier to picture, understand and remember.
-            </p>
+                                    <label>
+                                        <span>Average step length</span>
+                                        <div class="assumption-input">
+                                            <span>m</span>
+                                            <input id="assumeStep" type="number" min="0.1" step="0.01" value="0.75">
+                                        </div>
+                                    </label>
+                                </div>
 
-            <p>
-                Real-world comparisons are estimates. Prices, distances, energy use
-                and other assumptions can vary, which is why they're clearly labelled
-                and editable where possible.
-            </p>
-        </div>
+                                <button class="apply-button" id="applyAssumptions" type="button">
+                                    Apply assumptions
+                                </button>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
 
-        <div class="about-stats">
-            <div>
-                <strong>01</strong>
-                <span>Enter something</span>
+                <div class="meaning-section">
+                    <div class="meaning-heading">
+                        <p class="eyebrow">The ridiculous bit</p>
+                        <h2>Okay... but what does that actually mean?</h2>
+                        <p>
+                            The numbers make sense. These comparisons make them memorable.
+                        </p>
+                    </div>
+
+                    <div class="comparison-grid" id="comparisonGrid"></div>
+                </div>
+
+                <div class="weird-result" id="weirdResult" hidden>
+                    <div>
+                        <p class="eyebrow">You asked for weird</p>
+                        <h3 id="weirdTitle"></h3>
+                        <p id="weirdDescription"></p>
+                    </div>
+
+                    <button class="secondary-button" id="anotherWeird" type="button">
+                        Another one
+                    </button>
+                </div>
             </div>
-            <div>
-                <strong>02</strong>
-                <span>Convert it</span>
+        </section>
+
+        <section class="explore-section" id="explore">
+            <div class="content-width">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Explore</p>
+                        <h2>Things worth converting.</h2>
+                    </div>
+
+                    <button class="outline-button" id="surpriseButton" type="button">
+                        Surprise me
+                    </button>
+                </div>
+
+                <div class="explore-grid">
+                    <button class="explore-card" data-value="1000000" data-unit="seconds">
+                        <span class="explore-number">01</span>
+                        <strong>How long is 1 million seconds?</strong>
+                        <span>Time → perspective</span>
+                    </button>
+
+                    <button class="explore-card" data-value="100000" data-unit="gbp">
+                        <span class="explore-number">02</span>
+                        <strong>What is £100,000 in coffees?</strong>
+                        <span>Money → reality</span>
+                    </button>
+
+                    <button class="explore-card" data-value="1000" data-unit="miles">
+                        <span class="explore-number">03</span>
+                        <strong>How far is 1,000 miles?</strong>
+                        <span>Distance → scale</span>
+                    </button>
+
+                    <button class="explore-card" data-value="10" data-unit="tb">
+                        <span class="explore-number">04</span>
+                        <strong>What is 10 TB of data?</strong>
+                        <span>Data → stuff</span>
+                    </button>
+
+                    <button class="explore-card" data-value="10000" data-unit="hours">
+                        <span class="explore-number">05</span>
+                        <strong>How many working days are 10,000 hours?</strong>
+                        <span>Time → work</span>
+                    </button>
+
+                    <button class="explore-card" data-value="1000000000" data-unit="seconds">
+                        <span class="explore-number">06</span>
+                        <strong>What does 1 billion seconds look like?</strong>
+                        <span>Time → absurdity</span>
+                    </button>
+                </div>
             </div>
-            <div>
-                <strong>03</strong>
-                <span>Wonder why you looked it up</span>
+        </section>
+
+        <section class="about-section" id="about">
+            <div class="content-width">
+                <div class="about-grid">
+                    <div>
+                        <p class="eyebrow">About</p>
+                        <h2>Numbers are boring until you give them a reference point.</h2>
+                    </div>
+
+                    <div class="about-copy">
+                        <p>
+                            Everything Converter turns measurements, money and data into
+                            comparisons that are easier to picture.
+                        </p>
+
+                        <p>
+                            Some results are exact mathematical conversions. Others are
+                            deliberately labelled estimates based on editable assumptions.
+                        </p>
+
+                        <p>
+                            No account. No database. No tracking required. Just type a number
+                            and see what it actually means.
+                        </p>
+                    </div>
+                </div>
             </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="content-width footer-inner">
+            <span>EVERYTHING CONVERTER</span>
+            <span>Made for numbers that need context.</span>
         </div>
+    </footer>
 
-    </section>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-</main>
-
-<footer>
-    <span>EVERYTHING CONVERTER</span>
-    <span>Made for people who ask "but how much is that really?"</span>
-</footer>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
